@@ -1,6 +1,6 @@
 # Cost Strategy
 
-**Bottom line:** at gpt-4o-mini list prices, a Mira request costs about **$0.001** (a tenth of a cent). That is 10× under the PRD's $0.01 ceiling. A 10-PM pilot spends **about $1 a month on LLM calls**. The real cost drivers are the platform subscriptions (n8n Cloud, Langfuse), not tokens. The strategy is to keep the cheap model, keep prompts scoped, and watch cost per request in Langfuse rather than optimize tokens early.
+**Bottom line:** measured on live runs, a Mira request costs **$0.0004–0.0009** (a tenth of a cent). That is 10× under the PRD's $0.01 ceiling. A 10-PM pilot spends **about $1 a month on LLM calls**. The real cost drivers are the platform subscriptions (n8n Cloud, Langfuse), not tokens. The strategy is to keep the cheap model, keep prompts scoped, and watch cost per request in Langfuse rather than optimize tokens early.
 
 ## 1. Pricing inputs
 
@@ -16,7 +16,17 @@
 
 Prices change. Re-check them before quoting numbers to stakeholders. `config.price_per_1m_input_usd` and `config.price_per_1m_output_usd` in the *Project Knowledge Base* node drive the in-workflow cost metric, so update them there.
 
-## 2. Cost per request (model)
+## 2. Measured cost (live runs, 2026-11-05)
+
+| Run | Requests | Input tokens | Output tokens | Total cost | Avg per request |
+|---|---|---|---|---|---|
+| v2 batch (exec #8) | 23 | 41,650 | 5,009 | $0.0093 | $0.00040 |
+| v3 batch (exec #9) | 23 | 71,545 | 5,815 | $0.0142 | $0.00062 |
+| v3 single chat request (T8, exec #11) | 1 | 4,771 | 292 | $0.0009 | $0.00089 |
+
+v3 costs more per request than v2 only because v2 wrongly short-circuited 6 answerable questions at the cheap router; v3 answers them with the Status Reporter (~4,750 input tokens). The whole 3-version evaluation (69 requests) cost about **$0.04**. Measured numbers match the model below.
+
+## 3. Cost per request (model)
 
 Each request makes **one router call**, plus **one specialist call** unless it is clarified. Input sizes below were **measured** from the real n8n run of the workflow: system prompt plus scoped knowledge base, at about 4 characters per token. Output sizes are estimates until the live run; Langfuse will report exact numbers.
 
@@ -30,7 +40,7 @@ Each request makes **one router call**, plus **one specialist call** unless it i
 
 `cost = (input_tokens × 0.15 + output_tokens × 0.60) / 1,000,000`, summed over both calls. The Status Reporter has the biggest input, because it gets the full 25-task board, the timeline and the FACTS block. Output tokens cost 4× input, so long risk matrices are the most expensive answers.
 
-## 3. Monthly cost by scenario
+## 4. Monthly cost by scenario
 
 | Scenario | Requests / month | LLM cost | n8n executions | Langfuse units* | Platform plan that fits |
 |---|---|---|---|---|---|
@@ -42,7 +52,7 @@ Each request makes **one router call**, plus **one specialist call** unless it i
 
 Per PM per month, LLM spend is about **$0.10–$0.15**. That is far under the BRD's $5 target (BR-11). Platform cost per PM drops from about €2–2.40 (pilot) to about €1 plus about $0.60 (rollout).
 
-## 4. Cost strategy and levers
+## 5. Cost strategy and levers
 
 **Already in the design**
 
@@ -65,11 +75,11 @@ Per PM per month, LLM spend is about **$0.10–$0.15**. That is far under the BR
 
 **What we would not cut:** the router call, the PM-review footer, or tracing. These protect against the expensive failure, which is a wrong fact reaching a client, not a $0.001 request.
 
-## 5. Unit economics
+## 6. Unit economics
 
 At the BRD's base estimate of about 11 hours saved per PM per month, a PM costing $60/h internally saves about $660 a month. Mira costs about $0.15 in LLM spend plus about $3 of platform cost per PM. The case doesn't depend on token optimization; it depends on **quality** (M1, M4) and **adoption** (M13, M14). Both are measured.
 
-## 6. Monitoring and guardrails
+## 7. Monitoring and guardrails
 
 - A Langfuse dashboard widget for *total cost by day* and *average cost per trace by route*.
 - An alert if the average cost per request goes above $0.005 (5× normal). That usually means a prompt or KB grew by accident.

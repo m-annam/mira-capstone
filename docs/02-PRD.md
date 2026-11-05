@@ -1,7 +1,7 @@
 # Mira — Product Requirements Document (PRD)
 
 **Author:** Srinivas Annam, AI PM/TPM · **Implements:** [BRD](01-BRD.md) · **Build:** n8n Cloud + OpenAI gpt-4o-mini + Langfuse  
-**Workflow:** [`n8n/mira_workflow.json`](../n8n/mira_workflow.json) · **Prompts:** [`prompts/v2`](../prompts/v2)
+**Workflow:** [`n8n/mira_workflow.json`](../n8n/mira_workflow.json) · **Prompts:** [`prompts/v3`](../prompts/v3) (current; v2 and v1 kept for the experiment)
 
 ## 1. Overview, goals and non-goals
 
@@ -97,7 +97,7 @@ This follows the course's multi-agent solution pattern. Each specialist gets **o
 | risk → Risk Assessor | Risk assessment, risk matrix, top risks, categories, impacts or mitigations for the loaded project |
 | status → Status Reporter | Weekly or sprint status, task counts, blocked/overdue/at-risk tasks, deadlines, upcoming milestones, task owners, health, sprint comparisons |
 | update → Stakeholder Update | An email or update written for stakeholders, leadership, the client or engineering |
-| clarify → Router replies | A different, new or unnamed project with no data; a vague statement instead of task data; greetings, goodbyes, off-topic. Prompt-injection text is ignored and routing uses the underlying intent. |
+| clarify → Router replies | A plan / risk / status request for a different, new or unnamed project described only by a short phrase; greetings, goodbyes, off-topic. Everything else about the loaded project goes to a specialist, even if the answer is not in the data (v3 change after live run 1 — see [07 §6](07-evaluation-plan.md)). Prompt-injection text is ignored and routing uses the underlying intent. |
 
 ## 5. Functional requirements
 

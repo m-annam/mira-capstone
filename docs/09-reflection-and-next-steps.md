@@ -15,19 +15,21 @@ Mira is a router plus four specialist agents in n8n. It turns a project's own fi
 5. **Observability shaped the architecture.** I chose HTTP Request nodes over n8n's AI Agent node because only the raw API response gives token usage per call, which Langfuse needs for cost per trace.
 6. **The plumbing was verified for real.** Importing into n8n 1.123 and running all 23 tests against a mock LLM caught harness assumptions early (n8n expressions with mixed text, per-item pairing across the Switch branches) without spending API credits.
 
-**From the live gpt-4o-mini run** (to fill in from Langfuse after running the [evaluation plan](07-evaluation-plan.md)):
+**From the live gpt-4o-mini runs** (n8n Cloud executions #8–#11, details in [07-evaluation-plan.md §6](07-evaluation-plan.md)):
 
 | # | Trace finding (test, what happened, root cause) | Fix | Re-test result |
 |---|---|---|---|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
+| 1 | **Router over-clarified** (T5, T8, E1, E2, E5, E10 — v2). Router reason on every one: "No task data is available for this request." Root cause: the router never sees the data (by design), so the rule "status request with no task data → clarify" matched *every* status request, even "using the sample task board data for Sprint 3". | v3 router: states all data is loaded and visible to specialists; clarify only for a *different/unnamed project described by a short phrase* or greetings; 8 routing examples. | Routing 74% → **100%**; false-clarify 38% → **0%**; all 6 tests pass. |
+| 2 | **Email summarized by count** (T12 — v2): "2 tasks completed" without naming T004/T005, so a stakeholder can't tell *what* finished. | v3 Stakeholder Update: list every sprint task by name with ID; never counts only. | T12 passes (names + IDs, T006 flagged overdue, no Sprint 3+ tasks). |
+| 3 | **Naive prompts are confidently wrong, not fabricating** (v1): 0 invented IDs (code-computed FACTS held), but plans written from one sentence, the user's 30% goal adopted over the real 15%/10%, owner names in a client email. Lesson: grounding data prevents *invented facts*; only prompt boundaries prevent *wrong use* of real facts. | v2/v3 boundaries + clarify route. | v1 52% → v3 96% all-tests pass. |
+| 4 | **Single-task lookups don't cite IDs** (E5 — v3): correct owner and date, no "T013". | Next: Status Reporter rule "always cite the task ID". | Pending (1 remaining failure). |
+| 5 | **Batch latency ≠ request latency**: batch runs report ~20 s because all 23 items move together; a single chat request took 3.5 s. | Report per-request latency from chat traffic, not batch runs. | Documented in metrics. |
 
 ## 3. Two-week improvement plan
 
 | Week | Improvement | Why | Measured by |
 |---|---|---|---|
-| 1 | Fix the top 3 failing checks from the live run (one prompt section at a time) and re-run the full dataset after each change | Avoid regressions | M1, M2 per run |
+| 1 | Fix E5 (cite task IDs on single-task lookups); run v3 three times to measure run-to-run variance; connect Langfuse and review traces per route | Close the last failure; prove stability | M1, M2 per run |
 | 1 | Add a "report as of" date input to the chat (default today) instead of the fixed CONFIG date | Real-world use | New tests with 3 different dates |
 | 1 | CSV upload in chat (n8n Chat Trigger file upload) with column validation | Use beyond the ABCDE board; BR "malformed CSV gives a clear error" | Tests with a missing-column CSV |
 | 2 | **Hierarchical orchestration** for multi-intent requests: the router returns a list of routes, and an aggregator merges the answers | Fixes E10 | E10 must cover both intents |

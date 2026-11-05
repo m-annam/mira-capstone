@@ -1,14 +1,19 @@
-# Results
+# Results — live runs on n8n Cloud (gpt-4o-mini), 2026-11-05
 
-Live-run outputs go here (they are produced by your n8n + OpenAI run, not committed in advance):
-
-| File | Produced by |
+| File | What it is |
 |---|---|
-| `baseline_v2_run1.jsonl` (run2, run3) | `python3 eval/run_baseline.py --out results/baseline_v2_run1.jsonl --label "v2 run1"` |
-| `report_v2_run1.md` | `python3 eval/score.py results/baseline_v2_run1.jsonl --md results/report_v2_run1.md` |
-| `baseline_v1.jsonl` | same, with `PROMPT_VERSION = 'v1'` in the Prompt Registry node |
-| `prompt_experiment.md` | `python3 eval/score.py results/baseline_v1.jsonl --compare results/baseline_v2_run1.jsonl > results/prompt_experiment.md` |
-| `human_review.csv` | your rubric scores (template below) |
-| `screenshots/` | canvas, chat answers, Chat Response table, Langfuse trace + scores |
+| `prompt_experiment.md` | **Start here.** v1 vs v2 vs v3: every metric and every test |
+| `baseline_v1_run3.jsonl` | Raw outputs, naive prompts (n8n execution #10) |
+| `baseline_v2_run1.jsonl` | Raw outputs, first production prompts (execution #8) |
+| `baseline_v3_run2.jsonl` | Raw outputs, current prompts (execution #9) |
+| `report_v*_run*.md` | `eval/score.py` report per run (metrics + per-test failed checks) |
+| `scored_v*_run*.csv` | Per-test scores per run |
+| `chat_test_T8.md` | Single interactive chat request (execution #11): latency, tokens, cost, answer |
+| `human_review.csv` | Rubric sheet for the human review (docs/07 §4) |
 
-If you ran the tests inside n8n with **Run Baseline Tests** instead: in Langfuse, filter traces by tag `test:*`, export as CSV, rename the columns to `test_id,output,route`, and run `score.py` on that CSV.
+Each `.jsonl` row: test id, input, route, agent, router reason, full output, pass, failed checks, ID grounding, tokens, cost, latency, prompt version, Langfuse trace id, n8n execution id.
+
+Reproduce a score: `python3 eval/score.py results/baseline_v3_run2.jsonl`  
+Compare versions: `python3 eval/score.py results/baseline_v1_run3.jsonl --compare results/baseline_v3_run2.jsonl`
+
+Langfuse: the runs above were made before the Langfuse credential was connected, so traces were not ingested (the workflow continues on tracing errors by design). Connect the credential and click **Run Baseline Tests** to get traces + scores in Langfuse.

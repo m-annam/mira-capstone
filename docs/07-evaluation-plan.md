@@ -76,22 +76,36 @@ A test **passes overall** only if it passes the automated checks **and** scores 
 
 Run X1 first: it is the required "experiment with prompt modifications". X2–X5 are ablations, each removing one rule to show what that rule buys.
 
-## 6. Results (filled after the live run)
+## 6. Results — live runs on n8n Cloud with gpt-4o-mini (2026-11-05)
 
-> The workflow and scoring pipeline were verified end to end in a real n8n instance against a mock LLM ([06-n8n-workflow.md §4](06-n8n-workflow.md)). The numbers below must come from **your** live run with gpt-4o-mini. Until then they stay blank: no fabricated results.
+Three batch runs of the full dataset (23 tests) plus one interactive chat test. Raw outputs, per-test scores and reports are in [`results/`](../results). Pass/fail was computed twice — by the workflow's *Evaluate Output* node and by `eval/score.py` — and the two agreed on every test.
 
-| Metric | Target | v1 naive | v2 run 1 | v2 run 2 | v2 run 3 |
-|---|---|---|---|---|---|
-| Baseline pass rate (T1–T12) | ≥ 11/12 | | | | |
-| All-tests pass rate (23) | — | | | | |
-| Check-level accuracy | ≥ 95% | | | | |
-| Routing accuracy | ≥ 95% | | | | |
-| Fabricated IDs | 0 | | | | |
-| Clarify recall / false-clarify | 100% / ≤ 5% | | | | |
-| Latency p50 / p95 | < 10 s / < 20 s | | | | |
-| Avg cost per request | < $0.01 | | | | |
+| Metric | Target | v1 naive (exec #10) | v2 (exec #8) | **v3 (exec #9)** |
+|---|---|---|---|---|
+| Baseline pass rate (T1–T12) | ≥ 11/12 | 7/12 (58%) | 9/12 (75%) | **12/12 (100%)** |
+| All-tests pass rate (23) | — | 12/23 (52%) | 15/23 (65%) | **22/23 (96%)** |
+| Check-level accuracy | ≥ 95% | 75% | 80% | **96%** |
+| Routing accuracy | ≥ 95% | 78% | 74% | **100%** |
+| Fabricated IDs | 0 | 0 | 0 | **0** |
+| Clarify recall / false-clarify | 100% / ≤ 5% | 0% / 0% | 100% / 38% | **100% / 0%** |
+| Avg cost per request | < $0.01 | $0.00067 | $0.00040 | **$0.00062** |
+| Latency (single chat request, T8) | < 10 s | — | — | **3.5 s** |
 
-Per-test outputs: `results/baseline_*.jsonl` · Reports: `results/report_*.md` · Traces: Langfuse, filtered by tag `prompt:v2` and `test:*`.
+Batch latency (p50 ≈ 20 s) is the wall-clock time for all 23 items moving through the workflow together, not per-request latency; the single chat request above is the representative number.
+
+**Exit criteria (§ top): met by v3** — 12/12 baseline, 0 fabricated IDs, counts exact (T10), 100% routing, 3.5 s per request, $0.0006 per request.
+
+### What changed between versions (the prompt experiment)
+
+| Version | What it is | What the traces showed |
+|---|---|---|
+| **v1** naive | One-line role prompts, no clarify route, no grounding rules (same data, same code) | Wrote full plans for "We want to build a chatbot" (T2) and a 2-week project with no details (T9); listed ABCDE risks for "New project starting soon" (T4); answered "Things are going fine" with real ABCDE task IDs (T6); **adopted the user's 30% cost goal** and dropped the real 15%/10% goals (E6); put **owner names in a client email** and leaked other-sprint tasks (E9); dumped task data on "Thanks, that's all" (E7). Code-computed FACTS still kept every ID real (0 fabricated). |
+| **v2** production | Guide-style prompts: global rules, scoped boundaries, router with a clarify route | Fixed all of v1's vague-input and grounding failures, but the router **over-clarified**: 6 answerable status questions (T5, T8, E1, E2, E5, E10) got "No task data is available" because the router — which never sees the data — applied the "no task data" rule to any status request. T12's email said "2 tasks completed" without naming T004/T005. |
+| **v3** | v2 + two targeted fixes from the traces | Router told explicitly that all data is loaded and visible to specialists; clarify narrowed to *different/unnamed project described by a short phrase* or greetings; 8 routing examples added (including Sprint 11, T099, budget → plan, multi-intent → first intent). Stakeholder Update must list every task by name with ID. Result: routing 74% → 100%, false-clarify 38% → 0%, baseline 9/12 → 12/12. |
+
+Remaining v3 failure: **E5** — correct owner (Ravi Kumar) and due date (2026-05-26) but no task ID (T013) cited. Next prompt change: "always cite the task ID" in the Status Reporter's single-task rule (see reflection §3).
+
+Per-test results for all three versions: [`results/prompt_experiment.md`](../results/prompt_experiment.md).
 
 ## 7. Known limits of this evaluation
 

@@ -53,7 +53,7 @@ flowchart LR
    python3 eval/run_baseline.py --out results/baseline_v2.jsonl
    python3 eval/score.py results/baseline_v2.jsonl --md results/report_v2.md
    ```
-5. **Prompt experiment:** set `PROMPT_VERSION = 'v1'` in *Prompt Registry*, re-run, then `python3 eval/score.py results/baseline_v1.jsonl --compare results/baseline_v2.jsonl`.
+5. **Prompt experiment:** set `PROMPT_VERSION = 'v1'` (or `'v2'`) in *Prompt Registry*, re-run, then `python3 eval/score.py results/baseline_v1_run3.jsonl --compare results/baseline_v3_run2.jsonl`.
 
 Full setup: [docs/06-n8n-workflow.md](docs/06-n8n-workflow.md).
 
@@ -63,7 +63,7 @@ Full setup: [docs/06-n8n-workflow.md](docs/06-n8n-workflow.md).
 |---|---|---|
 | Multi-agent system design | Mandatory | Router + Planner, Risk Assessor, Status Reporter, Stakeholder Update, each with a strictly scoped knowledge base ([PRD §4.1](docs/02-PRD.md)) |
 | Orchestration pattern | Mandatory | **Router / Dispatcher**, justified in [PRD §4](docs/02-PRD.md); hierarchical is the next step for multi-intent requests |
-| Prompt engineering | Mandatory | Guide-style prompts (Global Context/Rules → Your Data → How to Answer → Boundaries) in [prompts/v2](prompts/v2); naive [v1](prompts/v1) kept for the experiment |
+| Prompt engineering | Mandatory | Guide-style prompts (Global Context/Rules → Your Data → How to Answer → Boundaries) in [prompts/v3](prompts/v3); [v2](prompts/v2) and naive [v1](prompts/v1) kept — live experiment v1 52% → v2 65% → v3 96% |
 | Data grounding | Mandatory | KB built only from the 4 files; counts, dates and risk ranking computed in code; every T###/R## checked against the data on every request |
 | Evaluation and observability | Mandatory | Langfuse traces (router + specialist generations, tokens, cost, latency) and scores; 23-test dataset with 147 checks |
 | Human-in-the-loop | Extended | Every answer is a "Draft for PM review"; nothing is sent automatically |
@@ -78,14 +78,14 @@ Full setup: [docs/06-n8n-workflow.md](docs/06-n8n-workflow.md).
 
 ```
 data/                 source files from the problem statement (description, timeline, risks, task board, eval inputs)
-prompts/v2, v1        system prompts (production / naive baseline)
+prompts/v3, v2, v1    system prompts (current / first production / naive baseline)
 n8n/mira_workflow.json  the importable workflow (generated)
 n8n/src/*.js          Code-node sources (knowledge base + FACTS, router parsing, formatter, metrics, Langfuse trace)
 tools/build_workflow.py  rebuilds the workflow JSON from data + prompts + src + ground truth
 eval/                 ground truth, check engine, run_baseline.py, score.py, compute_expected.py
 tests/                offline harness (runs the workflow logic in Node), JS/Python parity tests, fixtures
 docs/                 deliverables 1–9
-results/              live run outputs and reports (added after the live run)
+results/              live run outputs (jsonl), scored CSVs, reports, prompt experiment
 ```
 
 ## Verification status
@@ -93,7 +93,8 @@ results/              live run outputs and reports (added after the live run)
 - ✅ Workflow logic: `node tests/run_workflow_offline.js` (23/23 routed and scored; FACTS correct) and `node tests/run_workflow_offline.js bad` (all 6 bad answers caught)
 - ✅ Check engines: `python3 tests/test_checks.py` (JS ⇄ Python parity on 29 fixture answers; FACTS = independent Python computation)
 - ✅ Real n8n 1.123: imported and executed end to end against mock OpenAI/Langfuse; chat webhook + `run_baseline.py` + `score.py` loop works
-- ⏳ Live gpt-4o-mini run and Langfuse screenshots: see the [evaluation plan](docs/07-evaluation-plan.md) §3 (results go in `results/`)
+- ✅ **Live on n8n Cloud with gpt-4o-mini:** prompt v3 passes **12/12 baseline, 22/23 overall, 100% routing, 0 fabricated IDs, 3.5 s and ~$0.0006 per request** — v1 → v2 → v3 experiment in [results/prompt_experiment.md](results/prompt_experiment.md)
+- ⏳ Langfuse traces: connect the Langfuse credential and re-run (tracing is optional for the run; scores are also computed in-workflow)
 
 Everything in `eval/` and `tests/` uses only the Python 3 standard library and Node.js; no installs are needed.
 

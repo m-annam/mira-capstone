@@ -24,7 +24,7 @@ def code(name):
     s = s.replace("__RISKS_CSV__", js(rd("data", "project_risks.csv")))
     s = s.replace("__TASKS_CSV__", js(rd("data", "sample_task_board.csv")))
     if "__PROMPTS__" in s:
-        prompts = {v: {k: rd("prompts", v, f"{k}.md").strip() for k in ["global", "router", "planner", "risk", "status", "update"]} for v in ["v1", "v2"]}
+        prompts = {v: {k: rd("prompts", v, f"{k}.md").strip() for k in ["global", "router", "planner", "risk", "status", "update"]} for v in ["v1", "v2", "v3"]}
         s = s.replace("__PROMPTS__", json.dumps(prompts, indent=2, ensure_ascii=False))
     if "__TEST_CASES__" in s:
         tests = json.load(open(os.path.join(ROOT, "eval", "ground_truth.json"), encoding="utf-8"))["tests"]
