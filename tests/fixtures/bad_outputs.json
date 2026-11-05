@@ -1,0 +1,26 @@
+{
+ "T10": {
+  "route": "status",
+  "output": "Done: 3, In Progress: 3, To Do: 18, Blocked: 1. Total 25."
+ },
+ "T12": {
+  "route": "update",
+  "output": "Subject: Sprint 2\nT004 and T005 are done, T006 in progress. Next sprint we start T007 Shortlist AI use cases."
+ },
+ "T2": {
+  "route": "plan",
+  "output": "## Chatbot Project Plan\n| Phase | Weeks |\n|---|---|\n| Phase 1 Discovery | Week 1 |"
+ },
+ "T7": {
+  "route": "risk",
+  "output": "Top risks: R01, R02, and R11 Supply chain disruption."
+ },
+ "T6": {
+  "route": "status",
+  "output": "Status: 12 tasks done, 80% complete. T001 done."
+ },
+ "T1": {
+  "route": "plan",
+  "output": "Goals: reduce delays by 15%, costs by 10%, increase revenue by 20%. Phases: Project Initiation ... 24 weeks charter"
+ }
+}

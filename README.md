@@ -1,3 +1,105 @@
-# Mira Capstone
+# Mira — AI-Powered Project Intelligence Assistant
 
-Capstone project workspace. Work in progress.
+**Interview Kickstart · Applied Agentic AI for PMs/TPMs · Capstone project**  
+Author: Srinivas Annam · Stack: **n8n Cloud** (multi-agent workflow) · **OpenAI gpt-4o-mini** · **Langfuse** (tracing and evaluation)
+
+Mira helps Nexora's PMs/TPMs run the ABCDE Ltd. AI Adoption Project. From the project's own files (description, timeline, risk register and task board) it generates:
+
+- **project plans**
+- **risk assessments**
+- **weekly status reports**
+- **stakeholder update emails**
+
+Vague requests get clarifying questions instead of invented answers. Every request is traced and scored in Langfuse.
+
+```mermaid
+flowchart LR
+  Q[PM request] --> KB[Knowledge Base + FACTS<br/>computed in code]
+  KB --> R{{Router agent}}
+  R -->|plan| P[Planner]
+  R -->|risk| K[Risk Assessor]
+  R -->|status| S[Status Reporter]
+  R -->|update| U[Stakeholder Update]
+  R -->|vague| C[Clarifying questions]
+  P & K & S & U & C --> F[Formatter] --> E[Metrics] --> L[(Langfuse)]
+```
+
+## Deliverables
+
+| # | Deliverable | Where |
+|---|---|---|
+| 1 | BRD | [docs/01-BRD.md](docs/01-BRD.md) |
+| 2 | PRD | [docs/02-PRD.md](docs/02-PRD.md) |
+| 3 | Ground truth dataset | [docs/03-ground-truth-dataset.md](docs/03-ground-truth-dataset.md) · [eval/ground_truth.json](eval/ground_truth.json) · [eval/ground_truth.csv](eval/ground_truth.csv) |
+| 4 | Metrics and their definitions | [docs/04-metrics.md](docs/04-metrics.md) |
+| 5 | Metrics implementation | [docs/05-metrics-implementation.md](docs/05-metrics-implementation.md) · [eval/](eval/) · `Evaluate Output` / `Build Langfuse Trace` nodes |
+| 6 | Extracted JSON of the system | [n8n/mira_workflow.json](n8n/mira_workflow.json) · [docs/06-n8n-workflow.md](docs/06-n8n-workflow.md) |
+| 7 | Evaluation plan | [docs/07-evaluation-plan.md](docs/07-evaluation-plan.md) |
+| 8 | Cost strategy | [docs/08-cost-strategy.md](docs/08-cost-strategy.md) |
+| 9 | Reflection and next steps | [docs/09-reflection-and-next-steps.md](docs/09-reflection-and-next-steps.md) |
+| 10 | README | this file |
+
+## Quick start
+
+1. **Import** `n8n/mira_workflow.json` into n8n Cloud (*Workflows → Import from File*).
+2. **Credentials:**
+   - OpenAI API key on the 5 `Agent:` nodes.
+   - Basic Auth (Langfuse public key / secret key) on `Langfuse: Ingest`.
+   - For a US Langfuse project, change `langfuse_host` in *Project Knowledge Base*.
+3. **Chat:** *Open chat* → "Which tasks are blocked or at risk of missing their deadline?"
+4. **Evaluate:** click **Run Baseline Tests** → *Execute workflow*. That runs all 23 tests; results go to *Chat Response* and Langfuse. Or, from a terminal:
+   ```bash
+   export N8N_CHAT_URL="https://<you>.app.n8n.cloud/webhook/<id>/chat"   # Chat Trigger → Make Chat Publicly Available
+   python3 eval/run_baseline.py --out results/baseline_v2.jsonl
+   python3 eval/score.py results/baseline_v2.jsonl --md results/report_v2.md
+   ```
+5. **Prompt experiment:** set `PROMPT_VERSION = 'v1'` (or `'v2'`) in *Prompt Registry*, re-run, then `python3 eval/score.py results/baseline_v1_run3.jsonl --compare results/baseline_v3_run2.jsonl`.
+
+Full setup: [docs/06-n8n-workflow.md](docs/06-n8n-workflow.md).
+
+## How it maps to the course
+
+| Concept | Mandatory? | How Mira applies it |
+|---|---|---|
+| Multi-agent system design | Mandatory | Router + Planner, Risk Assessor, Status Reporter, Stakeholder Update, each with a strictly scoped knowledge base ([PRD §4.1](docs/02-PRD.md)) |
+| Orchestration pattern | Mandatory | **Router / Dispatcher**, justified in [PRD §4](docs/02-PRD.md); hierarchical is the next step for multi-intent requests |
+| Prompt engineering | Mandatory | Guide-style prompts (Global Context/Rules → Your Data → How to Answer → Boundaries) in [prompts/v3](prompts/v3); [v2](prompts/v2) and naive [v1](prompts/v1) kept — live experiment v1 52% → v2 65% → v3 96% |
+| Data grounding | Mandatory | KB built only from the 4 files; counts, dates and risk ranking computed in code; every T###/R## checked against the data on every request |
+| Evaluation and observability | Mandatory | Langfuse traces (router + specialist generations, tokens, cost, latency) and scores; 23-test dataset with 147 checks |
+| Human-in-the-loop | Extended | Every answer is a "Draft for PM review"; nothing is sent automatically |
+| Extended capability | ≥ 1 required | **Stakeholder Update Generator** (leadership / engineering / client) |
+| Fine-tuning | Extended | Plan in [reflection §4](docs/09-reflection-and-next-steps.md) |
+
+## Lifecycle
+
+**Review** (problem statements, chose Mira) → **Select** (Mira: TPM-core, data provided, no OAuth) → **Plan** (BRD) → **Design** (PRD, agents, KB scoping) → **Build** (n8n workflow generated from versioned sources) → **Execute** (chat and one-click test run) → **Evaluate/Optimize** (scores in Langfuse, `score.py`, prompt experiments) → **Test** (baseline + 11 edge cases) → **Document** (this repo) → **Submit**.
+
+## Repository layout
+
+```
+data/                 source files from the problem statement (description, timeline, risks, task board, eval inputs)
+prompts/v3, v2, v1    system prompts (current / first production / naive baseline)
+n8n/mira_workflow.json  the importable workflow (generated)
+n8n/src/*.js          Code-node sources (knowledge base + FACTS, router parsing, formatter, metrics, Langfuse trace)
+tools/build_workflow.py  rebuilds the workflow JSON from data + prompts + src + ground truth
+eval/                 ground truth, check engine, run_baseline.py, score.py, compute_expected.py
+tests/                offline harness (runs the workflow logic in Node), JS/Python parity tests, fixtures
+docs/                 deliverables 1–9
+results/              live run outputs (jsonl), scored CSVs, reports, prompt experiment
+```
+
+## Verification status
+
+- ✅ Workflow logic: `node tests/run_workflow_offline.js` (23/23 routed and scored; FACTS correct) and `node tests/run_workflow_offline.js bad` (all 6 bad answers caught)
+- ✅ Check engines: `python3 tests/test_checks.py` (JS ⇄ Python parity on 29 fixture answers; FACTS = independent Python computation)
+- ✅ Real n8n 1.123: imported and executed end to end against mock OpenAI/Langfuse; chat webhook + `run_baseline.py` + `score.py` loop works
+- ✅ **Live on n8n Cloud with gpt-4o-mini:** prompt v3 passes **12/12 baseline, 22/23 overall, 100% routing, 0 fabricated IDs, 3.5 s and ~$0.0006 per request** — v1 → v2 → v3 experiment in [results/prompt_experiment.md](results/prompt_experiment.md)
+- ⏳ Langfuse traces: connect the Langfuse credential and re-run (tracing is optional for the run; scores are also computed in-workflow)
+
+Everything in `eval/` and `tests/` uses only the Python 3 standard library and Node.js; no installs are needed.
+
+## Key assumptions
+
+- **Reporting date 2026-04-24** and **week 1 = 2026-03-30**. The board's due dates are April–August 2026. Both are editable in `CONFIG`.
+- **Counts follow the CSV.** The problem statement says "3 Done"; the board has 5.
+- **Top risks are ranked by live task evidence** (blocked > overdue > due soon), because the register has no likelihood or severity scores.

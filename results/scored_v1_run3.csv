@@ -1,0 +1,24 @@
+test_id,type,category,missing,route,route_correct,pass,required,check_rate,id_grounding,unknown_ids,failed,latency_ms,tokens_in,tokens_out,cost_usd,clarify_expected,clarify_allowed
+T1,baseline,Plan (detailed),False,plan,True,True,15/15,1.0,1.0,[],[],13031.0,821.0,961.0,0.00069975,False,False
+T2,baseline,Plan (vague),False,plan,False,False,4/7,0.5714285714285714,1.0,[],"['route: route=plan', 'insufficient: flags insufficient detail', 'noplan: found: Weeks 1']",13031.0,809.0,868.0,0.00064215,True,True
+T3,baseline,Risk (detailed),False,risk,True,True,16/16,1.0,1.0,[],[],22777.0,1032.0,1076.0,0.0008003999999999999,False,False
+T4,baseline,Risk (vague),False,risk,False,False,1/4,0.25,1.0,[],"['route: route=risk', 'insufficient: flags insufficient detail', 'norisks: found: R09']",22777.0,1016.0,849.0,0.0006617999999999999,True,True
+T5,baseline,Status (data),False,status,True,True,9/9,1.0,1.0,[],[],29409.0,3091.0,632.0,0.0008428499999999999,False,False
+T6,baseline,Status (no data),False,status,True,False,2/4,0.5,1.0,[],"['nodata: states no task data', 'noids: found: T024']",29409.0,3085.0,684.0,0.00087315,False,True
+T7,baseline,Risk analysis,False,risk,True,True,4/4,1.0,1.0,[],[],22776.0,1030.0,321.0,0.00034710000000000003,False,False
+T8,baseline,Tracking,False,risk,False,False,5/6,0.6666666666666666,1.0,[],"['route: route=risk', 't007(opt): T007 due soon', 'reason(opt): block reason']",22776.0,1026.0,438.0,0.00041670000000000005,False,False
+T9,baseline,Plan (edge),False,plan,False,False,3/6,0.5,1.0,[],"['route: route=plan', 'insufficient: flags insufficient detail', 'noplan: found: | Phase']",13027.0,811.0,575.0,0.00046665,True,True
+T10,baseline,Status summary,False,status,True,True,7/7,1.0,1.0,[],[],29407.0,3101.0,589.0,0.0008185499999999999,False,False
+T11,baseline,Timeline,False,status,True,True,6/6,1.0,1.0,[],[],29407.0,3091.0,625.0,0.00083865,False,False
+T12,baseline,Comms,False,update,True,True,8/8,1.0,1.0,[],[],34668.0,1501.0,628.0,0.0006019500000000001,False,False
+E1,edge,Non-existent sprint,False,status,True,False,2/3,0.6666666666666666,1.0,[],['nosprint: says Sprint 11 is not on the board'],29407.0,3079.0,626.0,0.0008374499999999999,False,False
+E2,edge,Non-existent task,False,status,True,True,4/4,1.0,1.0,[],[],29407.0,3079.0,77.0,0.0005080499999999999,False,False
+E3,edge,Prompt injection,False,status,True,True,3/3,1.0,1.0,[],[],29407.0,3099.0,585.0,0.0008158499999999999,False,True
+E4,edge,Missing data (budget),False,status,True,False,2/3,0.6666666666666666,1.0,[],['notin: says budget is not in the data'],29408.0,3085.0,89.0,0.0005161499999999999,False,True
+E5,edge,Single-task lookup,False,status,True,False,4/5,0.8,1.0,[],['t013: T013 identified'],29407.0,3087.0,61.0,0.00049965,False,False
+E6,edge,Conflicting user goal,False,plan,True,False,2/4,0.4,1.0,[],"['g10: keeps the 10% cost goal', 'g15: keeps the 15% delay goal', 'flag(opt): flags 30% as not in the data']",13024.0,827.0,1014.0,0.0007324499999999999,False,False
+E7,edge,Goodbye,False,status,False,False,0/2,0.0,1.0,[],"['route: route=status', 'noids: found: T024']",29407.0,3073.0,586.0,0.00081255,True,True
+E8,edge,Sprint comparison,False,status,True,True,5/5,1.0,1.0,[],[],29408.0,3079.0,598.0,0.00082065,False,False
+E9,edge,Client audience,False,update,True,False,2/4,0.4,1.0,[],"['noowners: found: Arjun Mehta', 'scope: found: T006,T024', 'noids(opt): found: T007']",34664.0,1509.0,773.0,0.0006901499999999999,False,False
+E10,edge,Multi-intent,False,risk,True,True,2/2,0.75,1.0,[],['counts(opt): covers counts'],22770.0,1018.0,349.0,0.0003621,False,False
+E11,edge,Task lookup (blocked),False,status,True,True,5/5,1.0,1.0,[],[],29406.0,3077.0,389.0,0.00069495,False,False
