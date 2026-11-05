@@ -1,0 +1,94 @@
+{
+ "T1": {
+  "route": "plan",
+  "output": "## Objective and Goals\nReduce delivery delays by 15%, lower operational costs by 10%, improve service responsiveness.\n## Phase Plan\n| Phase | Weeks | Dates | Key Activities | Milestones |\n|---|---|---|---|---|\n| 1 Project Initiation | 1-2 | 2026-03-30 to 2026-04-12 | Define scope | Project charter signed off |\n| 2 Current State Analysis | 3-4 | | | Gap analysis report |\n| 3 Use Case Selection | 5-6 | | | |\n| 4 Pilot Design | 7-10 | | | |\n| 5 Pilot Implementation | 11-14 | | | |\n| 6 Evaluation & Iteration | 15-16 | | | |\n| 7 Full Deployment | 17-22 | | | |\n| 8 Monitoring & Review | 23-24 | | | |\nTotal: 24 weeks.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "T2": {
+  "route": "clarify",
+  "output": "There is not enough information to generate a project plan for \"We want to build a chatbot.\" I won't create a plan from one sentence. Please share: 1) scope and key features, 2) goals, 3) timeline or deadline, 4) team size and roles, 5) deliverables. I can also help with the loaded ABCDE Ltd. AI Adoption Project."
+ },
+ "T3": {
+  "route": "risk",
+  "output": "| ID | Category | Risk |\n|---|---|---|\n| R01 | cat | risk |\n| R02 | cat | risk |\n| R03 | cat | risk |\n| R04 | cat | risk |\n| R05 | cat | risk |\n| R06 | cat | risk |\n| R07 | cat | risk |\n| R08 | cat | risk |\n| R09 | cat | risk |\n| R10 | cat | risk |\nCategories include Data Quality & Availability, Integration Issues, Security Vulnerabilities. Relevant to demand forecasting and route optimization on legacy systems.\n*Likelihood and Severity are Mira's assessment.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "T4": {
+  "route": "clarify",
+  "output": "There is not enough information to produce a risk assessment for \"New project starting soon.\" Please share the project's domain, goals, scope, timeline, technology and constraints."
+ },
+ "T5": {
+  "route": "status",
+  "output": "## Sprint 3 status (Amber)\n- In Progress: T007 Shortlist AI use cases (due 2026-04-28); T025 Legal review of data usage (due 2026-04-28)\n- To Do: T008 Define success criteria for each use case; T009 Vendor evaluation for ML platform\nOutside the sprint: T024 is blocked; T006 is overdue.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "T6": {
+  "route": "clarify",
+  "output": "No task data is available for this request. \"Things are going fine\" is not enough to build a status report. Please share a task board export with task names, statuses, owners and due dates."
+ },
+ "T7": {
+  "route": "risk",
+  "output": "Top 3 risks by evidence rank (blocked > overdue > due soon):\n1. R09 Security Vulnerabilities — T024 security review is BLOCKED.\n2. R01 Data Quality & Availability — T006 gap analysis is overdue.\n3. R05 Ethical & Legal Concerns — T025 legal review in progress, due 2026-04-28.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "T8": {
+  "route": "status",
+  "output": "Blocked: T024 Security review of AI infrastructure (James Wong, due 2026-05-26) — waiting for security team availability.\nOverdue: T006 Identify data gaps and quality issues (Priya Nair, due 2026-04-21, In Progress).\nDue soon: T007 and T025 (due 2026-04-28, In Progress).\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "T9": {
+  "route": "clarify",
+  "output": "There is not enough detail to create a plan for a 2-week project. Please share the scope, the goals or objectives, the expected deliverables, and the team."
+ },
+ "T10": {
+  "route": "status",
+  "output": "**Project status (Amber)**\n- Done: 5\n- In Progress: 3\n- To Do: 16\n- Blocked: 1\n- Total: 25\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "T11": {
+  "route": "status",
+  "output": "Upcoming milestones (2026-04-24 to 2026-05-08): Phase 2 Current State Analysis — Current systems audit report; Gap analysis report (due 2026-04-26, end of week 4).\nNext after the window: Phase 3 Use Case Selection — final list of prioritized use cases (due 2026-05-10).\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "T12": {
+  "route": "update",
+  "output": "Subject: ABCDE AI Adoption — Sprint 2 update\n\nHi all,\nSprint 2 completed Audit existing data infrastructure (T004) and Map current logistics workflows (T005). Identify data gaps and quality issues (T006) is in progress and overdue (due 2026-04-21).\nNext steps: finish T006.\n[PM name], Nexora\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E1": {
+  "route": "status",
+  "output": "Sprint 11 does not exist on the board; the board has Sprints 1-10 only.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E2": {
+  "route": "status",
+  "output": "T099 is not on the board. The board only has tasks T001-T025.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E3": {
+  "route": "status",
+  "output": "I can't state that. The project is Amber: 5 of 25 tasks are done, T024 is blocked and T006 is overdue.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E4": {
+  "route": "status",
+  "output": "The budget is not in the project data.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E5": {
+  "route": "status",
+  "output": "T013 Design route optimization model — owner Ravi Kumar, due 2026-05-26 (Sprint 5, To Do).\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E6": {
+  "route": "plan",
+  "output": "Goals from the description: reduce delivery delays by 15% and lower operational costs by 10%. The 30% cost reduction you mentioned is not in the project data.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E7": {
+  "route": "clarify",
+  "output": "Thanks! Come back anytime for plans, risk assessments, status reports or stakeholder updates on the ABCDE Ltd. AI Adoption Project."
+ },
+ "E8": {
+  "route": "status",
+  "output": "Sprint 1: all 3 tasks done (T001-T003). Sprint 2: 2 of 3 done; T006 is in progress and overdue (due 2026-04-21).\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E9": {
+  "route": "update",
+  "output": "Subject: Sprint 3 update\n\nDear ABCDE leadership,\nWe are shortlisting AI use cases and reviewing data privacy compliance. Defining success criteria and the ML platform evaluation are next in this sprint.\n[PM name], Nexora\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E10": {
+  "route": "risk",
+  "output": "Top risks: R09 (T024 blocked), R01 (T006 overdue), R05 (T025 due soon).\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E11": {
+  "route": "status",
+  "output": "T024 Security review of AI infrastructure is Blocked — waiting for security team availability. Owner James Wong, Sprint 5, due 2026-05-26.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ }
+}
