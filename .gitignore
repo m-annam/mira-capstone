@@ -20,3 +20,7 @@ node_modules/
 # Editors
 .vscode/
 .idea/
+
+# Mira generated test artifacts
+tests/fixtures/offline_*_results.json
+tests/fixtures/facts_from_workflow.json
