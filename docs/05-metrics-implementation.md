@@ -84,8 +84,10 @@ This report was produced from the offline fixtures, where 6 deliberately bad ans
 
 1. Create a project at cloud.langfuse.com (EU) or us.cloud.langfuse.com (US) → *Settings → API Keys* → create a key pair.
 2. In n8n create a **Basic Auth** credential: user = public key (`pk-lf-…`), password = secret key (`sk-lf-…`). Select it on **Langfuse: Ingest**.
-3. US region: change `langfuse_host` in the *Project Knowledge Base* node config to `https://us.cloud.langfuse.com`.
-4. Suggested dashboard widgets:
+3. Region: `langfuse_host` in the *Project Knowledge Base* node config is `https://us.cloud.langfuse.com` (this project). EU projects use `https://cloud.langfuse.com`. A wrong host returns 401 "Invalid credentials. Confirm that you've configured the correct host."
+4. Chat messages that match a ground-truth test input (case, quotes and punctuation ignored) are graded as that test, so their `test_id`, `pass`, `check_rate` and `failed_checks` are filled; other chat messages show `graded: not graded` but still get the online metrics.
+5. Note: Langfuse returns a deprecation notice for `/api/public/ingestion` — traces/generations stop being accepted on 2026-11-16 (scores continue); migrate tracing to `/api/public/otel/v1/traces`.
+6. Suggested dashboard widgets:
    - average `baseline_pass` by tag `prompt:v1` vs `prompt:v2`
    - average `id_grounding` (should stay 1.0)
    - p95 latency

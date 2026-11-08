@@ -169,7 +169,7 @@ return {
     trace_id: $json.trace_id || rid(),
     config: { model: 'gpt-4o-mini', temperature: 0.2, router_temperature: 0, max_tokens: 1500,
       price_per_1m_input_usd: 0.15, price_per_1m_output_usd: 0.60,
-      langfuse_host: 'https://cloud.langfuse.com', ...CONFIG },
+      langfuse_host: 'https://us.cloud.langfuse.com', ...CONFIG },
     facts: { reporting_date: RD, counts, health, health_reason: healthReason, overdue, due_soon: dueSoon, blocked,
       current_phase: currentPhase && { phase: currentPhase.phase, name: currentPhase.phase_name },
       upcoming_milestones: upcomingMilestones,

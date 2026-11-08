@@ -11,7 +11,7 @@
    - In Langfuse, go to *Settings → API Keys → Create*.
    - In n8n, open **Langfuse: Ingest** → *Credential for Basic Auth* → **Create new**.
    - Set **User** = public key `pk-lf-…` and **Password** = secret key `sk-lf-…`.
-4. **Region:** the workflow posts to `https://cloud.langfuse.com` (EU). For a US project, open **Project Knowledge Base** and change `langfuse_host` to `https://us.cloud.langfuse.com`.
+4. **Region:** the workflow posts to `https://us.cloud.langfuse.com` (US, this project's region). For an EU project, open **Project Knowledge Base** and change it to `https://cloud.langfuse.com`. Keys only work on their own region's host — a mismatch returns **401 "Invalid credentials. Confirm that you've configured the correct host."**
 5. **Save.** Click **Open chat** (bottom of the canvas) and try: *"Which tasks are blocked or at risk of missing their deadline?"*
 6. **Run all tests:** click **Run Baseline Tests** → *Execute workflow*. Results appear in **Chat Response** (one row per test) and in Langfuse as `mira-eval T1 … E11` traces.
 7. *(Optional, for `eval/run_baseline.py`)* Open **When chat message received** → turn on **Make Chat Publicly Available** → copy the Chat URL → **Activate** the workflow.

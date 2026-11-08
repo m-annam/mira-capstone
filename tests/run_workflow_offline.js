@@ -88,7 +88,7 @@ for (const { json: t } of testItems) {
   const lfBody = JSON.parse(evalExpr(node('Langfuse: Ingest').parameters.jsonBody, store['Build Langfuse Trace']));
   assert(lfBody.batch.length >= 3 && lfBody.batch[0].type === 'trace-create', 'langfuse batch has trace + events');
   assert(lfBody.batch.every(e => e.id && e.timestamp && e.type && e.body), 'every langfuse event well formed');
-  assert(evalExpr(node('Langfuse: Ingest').parameters.url, store['Build Langfuse Trace']) === 'https://cloud.langfuse.com/api/public/ingestion', 'langfuse url');
+  assert(evalExpr(node('Langfuse: Ingest').parameters.url, store['Build Langfuse Trace']) === 'https://us.cloud.langfuse.com/api/public/ingestion', 'langfuse url');
   store['Langfuse: Ingest'] = { successes: lfBody.batch.map(e => ({ id: e.id, status: 201 })), errors: [] };
   const res = runCode('Chat Response', store['Langfuse: Ingest'], store).json;
   rows.push({ id: t.test_id, route, pass: res.pass, rc: res.route_correct, failed: res.failed_checks, cost: res.cost_usd, events: lfBody.batch.length });

@@ -30,6 +30,12 @@ def code(name):
         tests = json.load(open(os.path.join(ROOT, "eval", "ground_truth.json"), encoding="utf-8"))["tests"]
         slim = [{k: t[k] for k in ["test_id", "type", "category", "input", "expected_route", "checks"]} for t in tests]
         s = s.replace("__TEST_CASES__", json.dumps(slim, indent=1, ensure_ascii=False))
+    if "__TEST_INDEX__" in s:
+        import re
+        tests = json.load(open(os.path.join(ROOT, "eval", "ground_truth.json"), encoding="utf-8"))["tests"]
+        norm = lambda x: re.sub(r"[^a-z0-9]+", " ", re.sub(r"[\u2018\u2019\u201c\u201d\"'`]", "", x.lower())).strip()
+        idx = {norm(t["input"]): {k: t[k] for k in ["test_id", "type", "expected_route", "checks"]} for t in tests}
+        s = s.replace("__TEST_INDEX__", json.dumps(idx, ensure_ascii=False, separators=(",", ":")))
     if "/*__CHECK_ENGINE__*/" in s:
         s = s.replace("/*__CHECK_ENGINE__*/", rd("n8n", "src", "eval_checks.js"))
     return s
