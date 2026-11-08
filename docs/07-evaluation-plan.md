@@ -93,7 +93,7 @@ Three batch runs of the full dataset (23 tests) plus one interactive chat test. 
 
 Batch latency (p50 ≈ 20 s) is the wall-clock time for all 23 items moving through the workflow together, not per-request latency; the single chat request above is the representative number.
 
-**Exit criteria (§ top): met by v3** — 12/12 baseline, 0 fabricated IDs, counts exact (T10), 100% routing, 3.5 s per request, $0.0006 per request.
+**Exit criteria (§ top): met by v3, and by v4 with the tightened checks (23/23)** — 12/12 baseline, 0 fabricated IDs, counts exact (T10), 100% routing, 3.5 s per request, $0.0006 per request.
 
 ### What changed between versions (the prompt experiment)
 
@@ -103,7 +103,19 @@ Batch latency (p50 ≈ 20 s) is the wall-clock time for all 23 items moving thro
 | **v2** production | Guide-style prompts: global rules, scoped boundaries, router with a clarify route | Fixed all of v1's vague-input and grounding failures, but the router **over-clarified**: 6 answerable status questions (T5, T8, E1, E2, E5, E10) got "No task data is available" because the router — which never sees the data — applied the "no task data" rule to any status request. T12's email said "2 tasks completed" without naming T004/T005. |
 | **v3** | v2 + two targeted fixes from the traces | Router told explicitly that all data is loaded and visible to specialists; clarify narrowed to *different/unnamed project described by a short phrase* or greetings; 8 routing examples added (including Sprint 11, T099, budget → plan, multi-intent → first intent). Stakeholder Update must list every task by name with ID. Result: routing 74% → 100%, false-clarify 38% → 0%, baseline 9/12 → 12/12. |
 
-Remaining v3 failure: **E5** — correct owner (Ravi Kumar) and due date (2026-05-26) but no task ID (T013) cited. Next prompt change: "always cite the task ID" in the Status Reporter's single-task rule (see reflection §3).
+| **v4** (2026-11-07) | v3 + Status Reporter fixes found by reading every answer of a chat run, plus per-sprint facts computed in code | Counts always as 5 lines including Blocked and must sum to Total (T10 had dropped Blocked 1 and still said Total 25); sprint reports use only that sprint's computed `Sprint facts` (T5 had given project health, citing Sprint 2/5 tasks, as Sprint 3's); single-task answers lead with ID + name (E5). |
+
+**v3 → v4, live chat runs** (each test its own chat message; [results/chat_run_2026-11-07.md](../results/chat_run_2026-11-07.md)):
+
+| Metric | v3 (#23–#45) | v4 prompt only (#46–#68) | **v4 + sprint facts (#69–#91)** |
+|---|---|---|---|
+| Baseline pass (tightened checks) | 10/12 | 11/12 | **12/12** |
+| All 23 | 20/23 | 22/23 | **23/23** |
+| Routing / fabricated IDs | 23/23 / 0 | 23/23 / 0 | **23/23 / 0** |
+| Avg latency per chat request | — | 4.5 s | **4.2 s** |
+| Cost, 23 requests | — | $0.0144 | **$0.0150** |
+
+**Lesson: checks that pass can still hide wrong answers.** v3 originally scored 12/12 because two checks were too loose: T10's `blocked1` regex matched "1 blocked task" in the health sentence, and nothing checked T5's sprint scope. Both checks were tightened (`blocked1` must be its own count line or row; new `scope_health`), the real v3 T5 answer was added to the bad fixtures, and v3 re-graded drops to 10/12. Also: the prompt alone fixed T10 and E5 but not T5 — the model kept copying T006 from the project-wide overdue list. Computing the sprint's own facts in code fixed it, the same pattern as the original FACTS design.
 
 Per-test results for all three versions: [`results/prompt_experiment.md`](../results/prompt_experiment.md).
 

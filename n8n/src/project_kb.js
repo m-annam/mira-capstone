@@ -145,7 +145,14 @@ const factsBlock = [
 
 const sprintBlock = sprintNames.map(s => {
   const b = bySprint[s];
+  // Sprint-scoped facts, so a sprint report never has to borrow the project-wide lists.
+  const open = b.tasks.filter(t => t.status !== 'Done');
+  const ids = arr => arr.length ? arr.map(t => t.id).join(', ') : 'none';
+  const sOverdue = open.filter(t => t.due < RD), sBlocked = open.filter(t => t.status === 'Blocked');
+  const sDueSoon = open.filter(t => t.due >= RD && daysBetween(RD, t.due) <= CONFIG.AT_RISK_WINDOW_DAYS);
+  const sHealth = sOverdue.length || sBlocked.length ? 'Amber' : 'Green';
   return `### ${s} (Done ${b.counts.Done}, In Progress ${b.counts['In Progress']}, To Do ${b.counts['To Do']}, Blocked ${b.counts.Blocked})\n` +
+    `Sprint facts: health ${sHealth} | blocked in this sprint: ${ids(sBlocked)} | overdue in this sprint: ${ids(sOverdue)} | due soon in this sprint: ${ids(sDueSoon)}\n` +
     b.tasks.map(t => `- ${t.id} ${t.name} | ${t.status} | owner ${t.owner} | due ${t.due}${t.status !== 'Done' && t.due < RD ? ' | OVERDUE' : ''}`).join('\n');
 }).join('\n\n');
 

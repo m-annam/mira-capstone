@@ -376,6 +376,13 @@
           "label": "no invented progress percentages"
         },
         {
+          "id": "scope_health",
+          "type": "not_regex",
+          "flags": "im",
+          "pattern": "^(?![^\\n]*(outside|cross-sprint|other sprint|not in sprint 3|sprint [25]\\b))[^\\n]*\\b(T024|T006)\\b",
+          "label": "T024/T006 only mentioned as marked cross-sprint context, not as Sprint 3 health or next steps"
+        },
+        {
           "id": "grounded",
           "type": "ids_grounded",
           "label": "every task/risk ID exists in the data"
@@ -624,8 +631,9 @@
         {
           "id": "blocked1",
           "type": "regex",
-          "pattern": "blocked[^\\n\\d]{0,30}\\b1\\b|\\b1\\b[^\\n\\d]{0,30}blocked",
-          "label": "Blocked = 1"
+          "pattern": "^[^\\w\\n]*blocked[^\\w\\n]*1\\b",
+          "label": "Blocked = 1 listed as its own count line or row",
+          "flags": "im"
         },
         {
           "id": "total25",

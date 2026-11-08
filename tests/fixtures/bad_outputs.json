@@ -22,5 +22,9 @@
  "T1": {
   "route": "plan",
   "output": "Goals: reduce delays by 15%, costs by 10%, increase revenue by 20%. Phases: Project Initiation ... 24 weeks charter"
+ },
+ "T5": {
+  "route": "status",
+  "output": "## Weekly Status Report for Sprint 3\n\n### Overall Health\n**Amber.** Reason: 1 blocked task (T024) and 1 overdue task (T006).\n\n### Summary Counts\n- **Done:** 0\n- **In Progress:** 2\n- **To Do:** 2\n- **Blocked:** 0\n- **Total:** 4\n\n### Completed\n- None\n\n### In Progress\n- **T007 Shortlist AI use cases**\n  - Owner: Arjun Mehta\n  - Due Date: 2026-04-28\n- **T025 Legal review of data usage**\n  - Owner: Sarah Lin\n  - Due Date: 2026-04-28\n\n### Blocked\n- None\n\n### To Do\n- **T008 Define success criteria for each use case**\n  - Owner: Sarah Lin\n  - Due Date: 2026-05-02\n- **T009 Vendor evaluation for ML platform**\n  - Owner: James Wong\n  - Due Date: 2026-05-05\n\n### Overdue and Due Soon\n- **Overdue Tasks:**\n  - **T006 Identify data gaps and quality issues**\n    - Owner: Priya Nair\n    - Due Date: 2026-04-21\n    - Status: In Progress\n\n- **Due Soon Tasks:**\n  - **T007 Shortlist AI use cases**\n    - Owner: Arjun Mehta\n    - Due Date: 2026-04-28\n    - Status: In Progress\n  - **T025 Legal review of data usage**\n    - Owner: Sarah Lin\n    - Due Date: 2026-04-28\n    - Status: In Progress\n\n### Upcoming Milestones\n- **Phase 2 Current State Analysis: Current systems audit report; Gap analysis report**\n  - Due Date: 2026-04-26\n\n### Next Steps\n- Unblock T024: waiting for security team availability.\n\n_Sources: sample_task_board.csv, project_timeline.csv_  \n_Draft for PM review — verify before sharing._"
  }
 }

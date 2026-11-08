@@ -23,6 +23,7 @@ Prices change. Re-check them before quoting numbers to stakeholders. `config.pri
 | v2 batch (exec #8) | 23 | 41,650 | 5,009 | $0.0093 | $0.00040 |
 | v3 batch (exec #9) | 23 | 71,545 | 5,815 | $0.0142 | $0.00062 |
 | v3 single chat request (T8, exec #11) | 1 | 4,771 | 292 | $0.0009 | $0.00089 |
+| v4 chat run, 23 tests one message each (execs #69–#91, 2026-11-07) | 23 | — | — | $0.0150 | $0.00065 |
 
 v3 costs more per request than v2 only because v2 wrongly short-circuited 6 answerable questions at the cheap router; v3 answers them with the Status Reporter (~4,750 input tokens). The whole 3-version evaluation (69 requests) cost about **$0.04**. Measured numbers match the model below.
 
