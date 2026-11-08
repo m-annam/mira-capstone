@@ -63,7 +63,7 @@ The router adds `response_format: { type: 'json_object' }` and uses `router_temp
 | Check | Result |
 |---|---|
 | `node tests/run_workflow_offline.js good` executes every Code node and every HTTP body expression in Node.js, following the Switch and connections, with mock OpenAI answers | All 23 tests route correctly and pass; FACTS = 5/3/16/1/25, T006 overdue, T007 and T025 due soon, Amber, Phase 2 due 2026-04-26, top risks R09/R01/R05 |
-| `node tests/run_workflow_offline.js bad` with deliberately wrong answers | All 6 bad answers are caught |
+| `node tests/run_workflow_offline.js bad` with deliberately wrong answers | All 7 bad answers are caught |
 | `python3 tests/test_checks.py` | JS and Python check engines agree on all 29 fixture answers; workflow FACTS = independent Python computation |
 | **Real n8n 1.123.x**: imported with `n8n import:workflow`, run with `n8n execute` (Run Baseline Tests), OpenAI and Langfuse pointed at a local mock server | Execution status *success*. All 18 functional nodes ran; 23 items reached Chat Response; 23 Langfuse batches posted with Basic auth; OpenAI calls sent `Bearer` auth, model `gpt-4o-mini` and JSON mode for the router |
 | Same n8n, workflow activated, `eval/run_baseline.py` against the Chat Trigger webhook | 23/23 responses returned with `output`, `route`, `cost_usd` and `trace_id`; `eval/score.py` produced the report |

@@ -16,7 +16,7 @@
 |---|---|---|---|
 | Routing | Does the right agent answer? | M3, M6, M7 | Route vs expected route per test |
 | Grounding | Does it invent anything? | M4, M5, check failures | Automated checks + human spot check |
-| Task quality | Does the answer contain what the problem statement requires? | M1, M2 | 147 ground-truth checks |
+| Task quality | Does the answer contain what the problem statement requires? | M1, M2 | 151 ground-truth checks |
 | Format | Does every answer follow the template and carry the review note? | M8 | Formatter flag |
 | Ops | Is it fast and cheap? | M9, M10 | Langfuse timings and usage |
 | Robustness | Edge cases, injection, missing data, multi-intent | M1 on E1–E11 | Edge-case dataset |

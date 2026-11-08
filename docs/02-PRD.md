@@ -183,7 +183,7 @@ Acceptance criteria map to the ground-truth tests in [03-ground-truth-dataset.md
 
 ## 8. Evaluation summary
 
-There are 12 baseline tests and 11 edge cases, with 147 machine-checkable criteria. These are scored by the same engine in n8n (JS) and in `eval/score.py` (Python). The exit bar is ≥ 11/12 baseline passes and zero fabricated IDs. The plan is in [07-evaluation-plan.md](07-evaluation-plan.md); metrics are in [04-metrics.md](04-metrics.md).
+There are 12 baseline tests and 11 edge cases, with 151 machine-checkable criteria. These are scored by the same engine in n8n (JS) and in `eval/score.py` (Python). The exit bar is ≥ 11/12 baseline passes and zero fabricated IDs. The plan is in [07-evaluation-plan.md](07-evaluation-plan.md); metrics are in [04-metrics.md](04-metrics.md).
 
 ## 9. Decisions on earlier open questions
 

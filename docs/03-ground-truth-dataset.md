@@ -2,7 +2,7 @@
 
 **Files:** [`eval/ground_truth.json`](../eval/ground_truth.json) (machine-readable, used by n8n and `eval/score.py`) · [`eval/ground_truth.csv`](../eval/ground_truth.csv) (readable) · [`eval/compute_expected.py`](../eval/compute_expected.py) (how every expected value was derived)
 
-The dataset has **23 test cases**: the 12 provided baseline inputs (T1–T12) and 11 edge cases (E1–E11). Together they carry **147 checks**. Each test has:
+The dataset has **23 test cases**: the 12 provided baseline inputs (T1–T12) and 11 edge cases (E1–E11). Together they carry **151 checks**. Each test has:
 
 - the exact input
 - the expected route
@@ -40,14 +40,14 @@ Risk ranking: [('R09', 4), ('R01', 3), ('R05', 2), ('R06', 1), ('R07', 1), ('R10
 | T2 | Plan for "We want to build a chatbot." | clarify | Flags insufficient detail; asks scope, timeline, team size; no plan | insufficient, scope, timeline, team, no phase table, no ABCDE IDs |
 | T3 | Risk assessment for ABCDE | risk | R01–R10 categorized, tied to logistics/AI, likelihood/severity labelled as assessment | all 10 IDs, 3 categories, domain words, IDs grounded |
 | T4 | Risk assessment for "New project starting soon." | clarify | Insufficient; asks domain/goals/scope/timeline; no risks | insufficient, asks details, no risk IDs or ABCDE risk names |
-| T5 | Weekly status for Sprint 3 | status | T007 and T025 in progress; T008 and T009 to do; no other sprints | 4 IDs, real task name, no T010–T023, no fake % progress |
+| T5 | Weekly status for Sprint 3 | status | T007 and T025 in progress; T008 and T009 to do; no other sprints | 4 IDs, real task name, no T010–T023, no fake % progress; T024/T006 only as marked cross-sprint context; Phase 2 milestone listed |
 | T6 | Weekly status for "Things are going fine." | clarify or status | "No task data is available"; no statuses, counts or % | states no data, no %, no task IDs |
 | T7 | Top 3 risks | risk | 3 register risks with reason; evidence rank R09, R01, R05 | ≥ 3 distinct R IDs, reason, IDs grounded (R09/R01/R05 optional) |
 | T8 | Blocked or at-risk tasks | status | T024 blocked (security team); T006 overdue; T007 and T025 due soon | T024, "blocked", T006, due-date check, IDs grounded |
 | T9 | Plan for a 2-week project, no details | clarify | Asks scope, goals, deliverables; no plan | insufficient, scope, goals, deliverables, no plan table |
-| T10 | Task counts by status | status | 5 Done, 3 In Progress, 16 To Do, 1 Blocked, 25 total | each count by regex, total 25 |
+| T10 | Task counts by status | status | 5 Done, 3 In Progress, 16 To Do, 1 Blocked, 25 total | each count by regex (Blocked 1 must be its own count line or row), total 25 |
 | T11 | Milestones in the next 2 weeks | status | Phase 2 audit report and gap analysis report due 2026-04-26; next: Phase 3 (2026-05-10) | audit report, gap analysis report, date/week, no invented phases |
-| T12 | Stakeholder email for Sprint 2 | update | Subject; T004 and T005 done, T006 in progress/overdue; no Sprint 3+ | subject, T004/T005/T006, no T007–T025 IDs or names, no fake % |
+| T12 | Stakeholder email for Sprint 2 | update | Subject; T004 and T005 done, T006 in progress/overdue; no Sprint 3+ | subject, T004/T005/T006, no T007–T025 IDs or names, no fake %, Sources line names the data files |
 
 ## Edge cases (E1–E11)
 
@@ -78,7 +78,7 @@ These go beyond the provided dataset to test boundaries, adversarial input and k
 | `percents_allowed` | Every N% in the output is in the allowed list | T1: only 15% and 10% |
 | `min_distinct` | At least N distinct matches | T7: ≥ 3 risk IDs |
 
-The checks were validated with 23 hand-written "good" answers, all of which pass, and 6 "bad" answers that reproduce typical failures:
+The checks were validated with 23 hand-written "good" answers, all of which pass, and 7 "bad" answers that reproduce typical failures:
 
 - the problem statement's "3 Done" count
 - Sprint 3 tasks leaking into the Sprint 2 email
@@ -86,5 +86,6 @@ The checks were validated with 23 hand-written "good" answers, all of which pass
 - fabricated status percentages
 - an invented R11 risk
 - an invented 20% goal
+- a real v3 Sprint 3 report that gave project health (other-sprint tasks T024/T006) as the sprint's
 
-All 6 bad answers fail (`tests/run_workflow_offline.js bad`, `tests/test_checks.py`). Keyword checks can't judge tone or completeness, so every run also gets a short human review. See [07-evaluation-plan.md](07-evaluation-plan.md).
+All 7 bad answers fail (`tests/run_workflow_offline.js bad`, `tests/test_checks.py`). Keyword checks can't judge tone or completeness, so every run also gets a short human review. That review is how the 2026-11-07 chat run found two answers that passed loose checks (T10 dropped the Blocked count; T5 mixed project and sprint health); the checks were tightened and the dataset grew from 147 to 151 checks (see [chat_run_2026-11-07.md](../results/chat_run_2026-11-07.md)). See [07-evaluation-plan.md](07-evaluation-plan.md).
