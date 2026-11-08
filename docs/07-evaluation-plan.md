@@ -105,6 +105,8 @@ Batch latency (p50 ≈ 20 s) is the wall-clock time for all 23 items moving thro
 
 | **v4** (2026-11-07) | v3 + Status Reporter fixes found by reading every answer of a chat run, plus per-sprint facts computed in code | Counts always as 5 lines including Blocked and must sum to Total (T10 had dropped Blocked 1 and still said Total 25); sprint reports use only that sprint's computed `Sprint facts` (T5 had given project health, citing Sprint 2/5 tasks, as Sprint 3's); single-task answers lead with ID + name (E5). |
 
+| **v5** (2026-11-07) | v4 + two fixes from reviewing the v4 answers | Sprint reports keep the project milestones (T5 had dropped Phase 2, due 2026-04-26); Stakeholder Update names the data files in Sources (T12/E9 said "Project Knowledge Base"). New checks `milestone` and `sources_files`; v4 re-graded with them: 20/23. |
+
 **v3 → v4, live chat runs** (each test its own chat message; [results/chat_run_2026-11-07.md](../results/chat_run_2026-11-07.md)):
 
 | Metric | v3 (#23–#45) | v4 prompt only (#46–#68) | **v4 + sprint facts (#69–#91)** |
@@ -114,6 +116,17 @@ Batch latency (p50 ≈ 20 s) is the wall-clock time for all 23 items moving thro
 | Routing / fabricated IDs | 23/23 / 0 | 23/23 / 0 | **23/23 / 0** |
 | Avg latency per chat request | — | 4.5 s | **4.2 s** |
 | Cost, 23 requests | — | $0.0144 | **$0.0150** |
+
+**v5, three identical runs (run-to-run variance)** — [results/variance_v5.md](../results/variance_v5.md):
+
+| Metric | Run 1 (#92–#114) | Run 2 (#115–#137) | Run 3 (#138–#160) | All 69 |
+|---|---|---|---|---|
+| Baseline T1–T12 | 11/12 | 12/12 | 12/12 | 35/36 |
+| All 23 | 22/23 | 23/23 | 23/23 | **68/69 (98.6%)** |
+| Routing / fabricated IDs | 23/23 / 0 | 23/23 / 0 | 23/23 / 0 | **69/69 / 0** |
+| Avg latency / cost (23 req) | 4.4 s / $0.0150 | 4.2 s / $0.0151 | 4.5 s / $0.0152 | 4.4 s / $0.0453 |
+
+22 of 23 tests passed in every run, routing never changed, and cost varied by under 2%. The one flaky test is **T1**: in run 1 the plan's phase table had phase numbers but no phase names (check rate 0.47). The Planner prompt asks for a `Phase` column without saying "number and name", so at temperature 0.2 the model occasionally drops the name. One run per prompt change is not enough evidence; three runs exposed it.
 
 **Lesson: checks that pass can still hide wrong answers.** v3 originally scored 12/12 because two checks were too loose: T10's `blocked1` regex matched "1 blocked task" in the health sentence, and nothing checked T5's sprint scope. Both checks were tightened (`blocked1` must be its own count line or row; new `scope_health`), the real v3 T5 answer was added to the bad fixtures, and v3 re-graded drops to 10/12. Also: the prompt alone fixed T10 and E5 but not T5 — the model kept copying T006 from the project-wide overdue list. Computing the sprint's own facts in code fixed it, the same pattern as the original FACTS design.
 

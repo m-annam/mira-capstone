@@ -24,6 +24,8 @@ Mira is a router plus four specialist agents in n8n. It turns a project's own fi
 | 3 | **Naive prompts are confidently wrong, not fabricating** (v1): 0 invented IDs (code-computed FACTS held), but plans written from one sentence, the user's 30% goal adopted over the real 15%/10%, owner names in a client email. Lesson: grounding data prevents *invented facts*; only prompt boundaries prevent *wrong use* of real facts. | v2/v3 boundaries + clarify route. | v1 52% → v3 96% all-tests pass. |
 | 4 | **Single-task lookups don't cite IDs** (E5 — v3): correct owner and date, no "T013". | v4 Status Reporter: single-task answers lead with ID + name. | E5 passes (v4, exec #85). |
 | 6 | **Passing checks hid two wrong answers** (2026-11-07 chat run, found by reading every answer): T10 dropped the Blocked count (rows summed to 24, "Total 25"); T5's Sprint 3 report used project health citing Sprint 2/5 tasks and said "Blocked: None" then "Unblock T024". Root cause in the checks: T10's regex matched "1 blocked task" elsewhere in the text; no check on sprint scope. | Tightened `blocked1`, new `scope_health` check, real T5 answer added as a bad fixture; v4 prompt; per-sprint facts computed in code (prompt alone did not fix T5). | v4: 23/23 (execs #69–#91). Lesson for a QA-to-PM move: a green test suite is only as good as its assertions — read the outputs. |
+| 7 | **Smaller gaps in the v4 answers**: T5 dropped the project milestone (Phase 2, due 2026-04-26) from the sprint report; T12/E9 cited "Project Knowledge Base" instead of file names. | v5 prompts + checks `milestone`, `sources_files`. | Fixed in 3/3 runs (execs #92–#160). |
+| 8 | **Run-to-run variance** (v5 × 3): 68/69. T1 dropped phase names from the plan table in 1 of 3 runs; same prompt passed in 4 other runs. Root cause: "Phase" column not specified as number + name; specialists run at temperature 0.2. | Next: Planner rule "Phase column = number and name"; re-run × 3. | Open. |
 | 5 | **Batch latency ≠ request latency**: batch runs report ~20 s because all 23 items move together; a single chat request took 3.5 s. | Report per-request latency from chat traffic, not batch runs. | Documented in metrics. |
 
 ## 3. Two-week improvement plan
@@ -31,7 +33,8 @@ Mira is a router plus four specialist agents in n8n. It turns a project's own fi
 | Week | Improvement | Why | Measured by |
 |---|---|---|---|
 | Done | Fixed E5, T10 and T5 (v4); Langfuse connected, every chat run traced | Close the last failures | v4 23/23 |
-| 1 | Run v4 three times to measure run-to-run variance; add an LLM or rule check that summary rows add up to the total | Prove stability; catch arithmetic slips the regexes miss | M1, M2 per run |
+| Done | Ran v5 three times: 68/69, routing 69/69, cost ±2% | Prove stability | [variance_v5.md](../results/variance_v5.md) |
+| 1 | Fix the T1 phase-name flake; add a rule check that summary rows add up to the total | Remove the one unstable test; catch arithmetic slips the regexes miss | 3 runs at 69/69 |
 | 1 | Add a "report as of" date input to the chat (default today) instead of the fixed CONFIG date | Real-world use | New tests with 3 different dates |
 | 1 | CSV upload in chat (n8n Chat Trigger file upload) with column validation | Use beyond the ABCDE board; BR "malformed CSV gives a clear error" | Tests with a missing-column CSV |
 | 2 | **Hierarchical orchestration** for multi-intent requests: the router returns a list of routes, and an aggregator merges the answers | Fixes E10 | E10 must cover both intents |

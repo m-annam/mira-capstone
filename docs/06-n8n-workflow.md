@@ -27,7 +27,7 @@
 | 1b | Run Baseline Tests → Baseline Test Cases | Manual Trigger → Code | Emits the 23 ground-truth tests as items (`RUN = 'all' / 'baseline' / 'edge' / ['T8']`) |
 | 2 | Normalize Input | Code | One shape for chat and test items; stamps `started_at` |
 | 3 | Project Knowledge Base | Code | Embedded project files → **FACTS** (counts, overdue, due soon, blocked, health, phase dates, upcoming milestones, risk evidence ranking, and per-sprint facts: health, blocked, overdue, due soon) and one **scoped KB per agent**. `CONFIG` holds the reporting date (2026-04-24), week-1 date, windows, model, prices and Langfuse host. |
-| 4 | Prompt Registry | Code | Global + router + 4 specialist prompts in versions **v4** (current, default), **v3**, **v2** (first production) and **v1** (naive); set `PROMPT_VERSION` |
+| 4 | Prompt Registry | Code | Global + router + 4 specialist prompts in versions **v5** (current, default), **v4**, **v3**, **v2** (first production) and **v1** (naive); set `PROMPT_VERSION` |
 | 5 | Agent: Router | HTTP → OpenAI | gpt-4o-mini, temperature 0, JSON mode → `{route, reason, reply}` |
 | 6 | Parse Route | Code | Validates the route; anything malformed → `clarify` |
 | 7 | Route to Specialist | Switch | Outputs: Planner / Risk Assessor / Status Reporter / Stakeholder Update / Clarify |
@@ -70,12 +70,13 @@ The router adds `response_format: { type: 'json_object' }` and uses `router_temp
 
 | **Live, n8n Cloud + gpt-4o-mini** (2026-11-05): imported into `mallika-n8n.app.n8n.cloud`, runs #8 (v2), #9 (v3), #10 (v1) via *Run Baseline Tests*, #11 single chat request | All executions *success*; v3 passes 12/12 baseline, 22/23 overall ([results](../results)) |
 | **Live chat runs** (2026-11-07): every test as its own chat message, executions #23–#91 | 69 requests, all *success*, all traced in Langfuse; v4 passes 12/12 baseline, 23/23 overall ([chat_run_2026-11-07.md](../results/chat_run_2026-11-07.md)) |
+| **Variance runs** (2026-11-07): v5, 23 tests × 3 runs, executions #92–#160 | 69 requests, all *success* and traced; 68/69 pass, 69/69 routing ([variance_v5.md](../results/variance_v5.md)) |
 
 The mock run proves the **plumbing**: nodes, expressions, routing, scoring and tracing. It does not prove answer quality. That comes from the live gpt-4o-mini run in the [evaluation plan](07-evaluation-plan.md).
 
 ## 5. Changing things safely
 
-- **Prompts:** edit `prompts/v4/*.md` (or add `prompts/v5` and list it in `tools/build_workflow.py`) → `python3 tools/build_workflow.py` → re-import. Or edit the *Prompt Registry* node directly in n8n and copy the change back into the repo.
+- **Prompts:** edit `prompts/v5/*.md` (or add `prompts/v6` and list it in `tools/build_workflow.py`) → `python3 tools/build_workflow.py` → re-import. Or edit the *Prompt Registry* node directly in n8n and copy the change back into the repo.
 - **Reporting date / windows / model / prices:** the `CONFIG` block at the top of *Project Knowledge Base*.
 - **New tests:** add them to `eval/ground_truth.json` → rebuild (they're embedded in *Baseline Test Cases*).
 - After any change: `node tests/run_workflow_offline.js && python3 tests/test_checks.py`.

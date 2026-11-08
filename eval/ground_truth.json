@@ -383,6 +383,12 @@
           "label": "T024/T006 only mentioned as marked cross-sprint context, not as Sprint 3 health or next steps"
         },
         {
+          "id": "milestone",
+          "type": "regex",
+          "pattern": "Phase 2|2026-04-26",
+          "label": "upcoming project milestone listed (Phase 2, due 2026-04-26)"
+        },
+        {
           "id": "grounded",
           "type": "ids_grounded",
           "label": "every task/risk ID exists in the data"
@@ -777,6 +783,12 @@
           "label": "no invented progress percentages"
         },
         {
+          "id": "sources_files",
+          "type": "regex",
+          "pattern": "Sources:[^\\n]*(sample_task_board\\.csv|project_description\\.txt)",
+          "label": "Sources line names the data files"
+        },
+        {
           "id": "overdue",
           "type": "regex",
           "pattern": "overdue|past due|behind|delayed|slipped",
@@ -1151,6 +1163,12 @@
             "T024"
           ],
           "label": "no tasks outside Sprint 3"
+        },
+        {
+          "id": "sources_files",
+          "type": "regex",
+          "pattern": "Sources:[^\\n]*(sample_task_board\\.csv|project_description\\.txt)",
+          "label": "Sources line names the data files"
         },
         {
           "id": "noids",

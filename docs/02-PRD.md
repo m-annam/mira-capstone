@@ -1,7 +1,7 @@
 # Mira — Product Requirements Document (PRD)
 
 **Author:** Srinivas Annam, AI PM/TPM · **Implements:** [BRD](01-BRD.md) · **Build:** n8n Cloud + OpenAI gpt-4o-mini + Langfuse  
-**Workflow:** [`n8n/mira_workflow.json`](../n8n/mira_workflow.json) · **Prompts:** [`prompts/v4`](../prompts/v4) (current; v3, v2 and v1 kept for the experiment)
+**Workflow:** [`n8n/mira_workflow.json`](../n8n/mira_workflow.json) · **Prompts:** [`prompts/v5`](../prompts/v5) (current; v4–v1 kept for the experiment)
 
 ## 1. Overview, goals and non-goals
 

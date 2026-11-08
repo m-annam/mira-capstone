@@ -17,7 +17,7 @@
  },
  "T5": {
   "route": "status",
-  "output": "## Sprint 3 status (Amber)\n- In Progress: T007 Shortlist AI use cases (due 2026-04-28); T025 Legal review of data usage (due 2026-04-28)\n- To Do: T008 Define success criteria for each use case; T009 Vendor evaluation for ML platform\nOutside the sprint: T024 is blocked; T006 is overdue.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+  "output": "## Sprint 3 status (Amber)\n- In Progress: T007 Shortlist AI use cases (due 2026-04-28); T025 Legal review of data usage (due 2026-04-28)\n- To Do: T008 Define success criteria for each use case; T009 Vendor evaluation for ML platform\nUpcoming milestone: Phase 2 Current State Analysis, due 2026-04-26.\nOutside the sprint: T024 is blocked; T006 is overdue.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
  },
  "T6": {
   "route": "clarify",
