@@ -24,7 +24,7 @@ def code(name):
     s = s.replace("__RISKS_CSV__", js(rd("data", "project_risks.csv")))
     s = s.replace("__TASKS_CSV__", js(rd("data", "sample_task_board.csv")))
     if "__PROMPTS__" in s:
-        prompts = {v: {k: rd("prompts", v, f"{k}.md").strip() for k in ["global", "router", "planner", "risk", "status", "update"]} for v in ["v1", "v2", "v3", "v4", "v5"]}
+        prompts = {v: {k: rd("prompts", v, f"{k}.md").strip() for k in ["global", "router", "planner", "risk", "status", "update"]} for v in ["v1", "v2", "v3", "v4", "v5", "v6"]}
         s = s.replace("__PROMPTS__", json.dumps(prompts, indent=2, ensure_ascii=False))
     if "__TEST_CASES__" in s:
         tests = json.load(open(os.path.join(ROOT, "eval", "ground_truth.json"), encoding="utf-8"))["tests"]
@@ -97,7 +97,7 @@ def main():
     nodes = [
         sticky("Note: Overview",
                "## Mira — AI Project Intelligence Assistant (multi-agent)\nRouter + 4 specialist agents, each with a **strictly scoped** knowledge base.\n"
-               "1. Chat (or **Run Baseline Tests**) → 2. Knowledge base + deterministic FACTS → 3. Prompt Registry (v1–v5) → 4. **Router agent** → 5. Specialist agent → 6. Formatter → 7. Metrics → 8. Langfuse trace.\n\n"
+               "1. Chat (or **Run Baseline Tests**) → 2. Knowledge base + deterministic FACTS → 3. Prompt Registry (v1–v6) → 4. **Router agent** → 5. Specialist agent → 6. Formatter → 7. Metrics → 8. Langfuse trace.\n\n"
                "**Setup:** set the *OpenAI account* credential on the 5 OpenAI nodes and a *Basic Auth* credential (user = Langfuse public key, password = secret key) on **Langfuse: Traces (OTel)** and **Langfuse: Scores**. "
                "Host is US (`us.cloud.langfuse.com`); for EU change `langfuse_host` in *Project Knowledge Base*.",
                [X(0) - 40, -520], 760, 260, 4),
