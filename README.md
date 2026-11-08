@@ -50,6 +50,7 @@ flowchart LR
 | Architecture diagram | Above, and [PRD §4](docs/02-PRD.md) |
 | Baseline test results (all 12 inputs + 11 edge cases) | [results/variance_v6.md](results/variance_v6.md) (current, 69/69 over 3 runs) · [results/](results/) |
 | Screenshots | [Below](#screenshots) |
+| PDFs for upload (Q1–Q4, BRD, PRD) | [submission/](submission/) |
 
 ## Quick start
 
