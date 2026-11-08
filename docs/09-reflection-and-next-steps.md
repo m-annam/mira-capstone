@@ -35,7 +35,7 @@ Mira is a router plus four specialist agents in n8n. It turns a project's own fi
 | 2 | **Hierarchical orchestration** for multi-intent requests: the router returns a list of routes, and an aggregator merges the answers | Fixes E10 | E10 must cover both intents |
 | 2 | **Milestone Alert System:** a scheduled n8n run every Monday that posts at-risk milestones to Slack for PM approval | BR-09, proactive warnings | Alerts before the due date in replay tests |
 | 2 | **LLM-as-judge** scorer in Langfuse for the human-review rubric (correctness, completeness, tone) on a sample of live traffic | Scales human review | Agreement with human scores ≥ 80% |
-| 2 | Move tracing from `/api/public/ingestion` to Langfuse's OpenTelemetry endpoint | The ingestion endpoint is marked legacy | Traces still complete |
+| Done | Moved tracing from `/api/public/ingestion` to Langfuse's OpenTelemetry endpoint (scores stay on ingestion) | Langfuse stops accepting traces there on 2026-11-16 | Live run #22: traces ok, 7/7 scores accepted |
 
 ## 4. Connection to evaluation and fine-tuning
 

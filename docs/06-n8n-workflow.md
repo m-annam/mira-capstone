@@ -1,6 +1,6 @@
 # Extracted JSON of the System — n8n Multi-Agent Workflow
 
-**File to import:** [`n8n/mira_workflow.json`](../n8n/mira_workflow.json) (21 nodes: 18 functional + 3 sticky notes)  
+**File to import:** [`n8n/mira_workflow.json`](../n8n/mira_workflow.json) (22 nodes: 19 functional + 3 sticky notes)  
 **Generated from:** `n8n/src/*.js`, `prompts/`, `data/`, `eval/ground_truth.json` by `python3 tools/build_workflow.py`
 
 ## 1. Import into n8n Cloud (≈ 10 minutes)
@@ -9,8 +9,9 @@
 2. **OpenAI credential:** open any `Agent:` node → *Credential for OpenAI API* → **Create new** → paste your OpenAI API key → save. Select the same credential on all 5 `Agent:` nodes: Router, Planner, Risk Assessor, Status Reporter and Stakeholder Update.
 3. **Langfuse credential:**
    - In Langfuse, go to *Settings → API Keys → Create*.
-   - In n8n, open **Langfuse: Ingest** → *Credential for Basic Auth* → **Create new**.
+   - In n8n, open **Langfuse: Traces (OTel)** → *Credential for Basic Auth* → **Create new**.
    - Set **User** = public key `pk-lf-…` and **Password** = secret key `sk-lf-…`.
+   - Select the same credential on **Langfuse: Scores**.
 4. **Region:** the workflow posts to `https://us.cloud.langfuse.com` (US, this project's region). For an EU project, open **Project Knowledge Base** and change it to `https://cloud.langfuse.com`. Keys only work on their own region's host — a mismatch returns **401 "Invalid credentials. Confirm that you've configured the correct host."**
 5. **Save.** Click **Open chat** (bottom of the canvas) and try: *"Which tasks are blocked or at risk of missing their deadline?"*
 6. **Run all tests:** click **Run Baseline Tests** → *Execute workflow*. Results appear in **Chat Response** (one row per test) and in Langfuse as `mira-eval T1 … E11` traces.
@@ -34,8 +35,9 @@
 | 9 | Response Formatter | Code | One result shape for every route; enforces the Sources + "Draft for PM review" footer; drops the bulky KB |
 | 10 | Evaluate Output | Code | Online metrics and, for tests, ground-truth checks (same engine as `eval/checks.py`) |
 | 11 | Build Langfuse Trace | Code | Trace + router/specialist generations (tokens, cost, timing) + scores |
-| 12 | Langfuse: Ingest | HTTP → Langfuse | `POST {host}/api/public/ingestion`, Basic auth, *continue on error* |
-| 13 | Chat Response | Code | `output` for the chat, plus route, pass, failed checks, cost, latency, trace id |
+| 12 | Langfuse: Traces (OTel) | HTTP → Langfuse | `POST {host}/api/public/otel/v1/traces` (OTLP JSON, header `x-langfuse-ingestion-version: 4`), Basic auth, *continue on error* |
+| 13 | Langfuse: Scores | HTTP → Langfuse | `POST {host}/api/public/ingestion` (score-create only), Basic auth, *continue on error* |
+| 14 | Chat Response | Code | `output` for the chat, plus route, pass, failed checks, cost, latency, trace id |
 
 **Why HTTP Request nodes instead of the AI Agent node:**
 - They return OpenAI's `usage` (token counts) on every call, which Langfuse needs for cost per trace.

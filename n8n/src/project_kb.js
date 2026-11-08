@@ -160,8 +160,8 @@ const kb = {
   update: `## Project\nAI Adoption Project for ABCDE Ltd. Stated goals: reduce delivery delays by 15%, lower operational costs by 10%, improve service responsiveness.\n\n${factsBlock}\n\n## Per-sprint view (use ONLY the requested sprint)\n${sprintBlock}`,
 };
 
-const rid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-  const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
+// 32 hex chars: an OpenTelemetry trace id, which Langfuse uses as its trace id.
+const rid = () => Array.from({ length: 32 }, () => (Math.random() * 16 | 0).toString(16)).join('');
 
 return {
   json: {

@@ -32,9 +32,10 @@ function runCode(name, json, store) {
   const fn = new Function('$json', '$input', '$', code);
   return fn(json, { item: { json }, all: () => [{ json }] }, $);
 }
-function evalExpr(expr, json) { // n8n expression: "=" prefix, {{ js }} segments, literal text between
+function evalExpr(expr, json, store = {}) { // n8n expression: "=" prefix, {{ js }} segments, literal text between
   if (!expr.startsWith('=')) return expr;
-  const run = src => new Function('$json', `return (${src});`)(json);
+  const $ = name => { if (!(name in store)) throw new Error(`$('${name}') has no output yet`); return { item: { json: store[name] } }; };
+  const run = src => new Function('$json', '$', `return (${src});`)(json, $);
   const whole = expr.match(/^=\{\{([\s\S]*)\}\}$/);
   if (whole) return run(whole[1]);
   return expr.slice(1).replace(/\{\{([\s\S]*?)\}\}/g, (_, src) => String(run(src)));
@@ -85,12 +86,30 @@ for (const { json: t } of testItems) {
   step('Response Formatter', formatterInput);
   step('Evaluate Output', store['Response Formatter']);
   step('Build Langfuse Trace', store['Evaluate Output']);
-  const lfBody = JSON.parse(evalExpr(node('Langfuse: Ingest').parameters.jsonBody, store['Build Langfuse Trace']));
-  assert(lfBody.batch.length >= 3 && lfBody.batch[0].type === 'trace-create', 'langfuse batch has trace + events');
-  assert(lfBody.batch.every(e => e.id && e.timestamp && e.type && e.body), 'every langfuse event well formed');
-  assert(evalExpr(node('Langfuse: Ingest').parameters.url, store['Build Langfuse Trace']) === 'https://us.cloud.langfuse.com/api/public/ingestion', 'langfuse url');
-  store['Langfuse: Ingest'] = { successes: lfBody.batch.map(e => ({ id: e.id, status: 201 })), errors: [] };
-  const res = runCode('Chat Response', store['Langfuse: Ingest'], store).json;
+  // --- Langfuse v4: OTLP/HTTP JSON traces + score-create events ---
+  const otelNode = node('Langfuse: Traces (OTel)'), scoreNode = node('Langfuse: Scores');
+  const otel = JSON.parse(evalExpr(otelNode.parameters.jsonBody, store['Build Langfuse Trace'], store));
+  const otelResponse = { name: 'otel-ingestion-job' }; // what Langfuse returns; this is the Scores node's $json
+  const spans = otel.resourceSpans[0].scopeSpans[0].spans;
+  assert(spans.length === (route === 'clarify' ? 2 : 3), `${t.test_id}: ${route === 'clarify' ? 2 : 3} spans`);
+  assert(spans.every(sp => /^[0-9a-f]{32}$/.test(sp.traceId) && /^[0-9a-f]{16}$/.test(sp.spanId)), 'OTel ids are 32/16 hex');
+  assert(new Set(spans.map(sp => sp.traceId)).size === 1, 'one trace id');
+  assert(spans.filter(sp => !sp.parentSpanId).length === 1 && spans.filter(sp => sp.parentSpanId).every(sp => sp.parentSpanId === spans[0].spanId), 'generations are children of the root span');
+  assert(spans.every(sp => /^\d{19}$/.test(sp.startTimeUnixNano) && BigInt(sp.endTimeUnixNano) >= BigInt(sp.startTimeUnixNano)), 'nanosecond timestamps, end >= start');
+  const attr = (sp, k) => (sp.attributes.find(a => a.key === k) || {}).value;
+  assert(spans.every(sp => attr(sp, 'langfuse.trace.name') && attr(sp, 'langfuse.session.id') && attr(sp, 'langfuse.trace.tags')), 'trace attrs on every span');
+  const gens = spans.filter(sp => attr(sp, 'langfuse.observation.type')?.stringValue === 'generation');
+  assert(gens.length === spans.length - 1 && gens.every(g => JSON.parse(attr(g, 'langfuse.observation.usage_details').stringValue).input > 0), 'generations carry usage');
+  assert(evalExpr(otelNode.parameters.url, store['Build Langfuse Trace'], store) === 'https://us.cloud.langfuse.com/api/public/otel/v1/traces', 'otel url');
+  assert(otelNode.parameters.headerParameters.parameters[0].name === 'x-langfuse-ingestion-version' && otelNode.parameters.headerParameters.parameters[0].value === '4', 'v4 header');
+  const scores = JSON.parse(evalExpr(scoreNode.parameters.jsonBody, otelResponse, store));
+  assert(scores.batch.length >= 4 && scores.batch.every(e => e.type === 'score-create' && e.body.traceId === spans[0].traceId), 'scores are score-create on the same trace');
+  assert(evalExpr(scoreNode.parameters.url, otelResponse, store) === 'https://us.cloud.langfuse.com/api/public/ingestion', 'scores url');
+  store['Langfuse: Traces (OTel)'] = otelResponse;
+  store['Langfuse: Scores'] = { successes: scores.batch.map(e => ({ id: e.id, status: 201 })), errors: [] };
+  const lfBody = { batch: [...spans, ...scores.batch] };
+  const res = runCode('Chat Response', store['Langfuse: Scores'], store).json;
+  assert(res.langfuse_logged === true, 'langfuse_logged true when both calls succeed');
   rows.push({ id: t.test_id, route, pass: res.pass, rc: res.route_correct, failed: res.failed_checks, cost: res.cost_usd, events: lfBody.batch.length });
 }
 

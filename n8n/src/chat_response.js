@@ -4,7 +4,9 @@
 // compact result row (test id, route, pass, cost) for the execution log.
 // ============================================================================
 const r = $('Build Langfuse Trace').item.json;
-const langfuse_ok = !$json.error && !($json.errors && $json.errors.length);
+const ok = x => !!x && !x.error && !(Array.isArray(x.errors) && x.errors.length) && !(x.partialSuccess && x.partialSuccess.rejectedSpans);
+const traces_ok = ok($('Langfuse: Traces (OTel)').item.json);
+const scores_ok = ok($json);
 return {
   json: {
     output: r.output,
@@ -23,6 +25,7 @@ return {
     latency_ms: r.metrics.latency_ms,
     prompt_version: r.prompt_version,
     trace_id: r.trace_id,
-    langfuse_logged: langfuse_ok,
+    langfuse_logged: traces_ok && scores_ok,
+    langfuse_detail: `traces ${traces_ok ? 'ok' : 'FAILED'} (OTel), scores ${scores_ok ? 'ok' : 'FAILED'} (ingestion)`,
   },
 };

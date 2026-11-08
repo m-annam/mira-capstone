@@ -66,7 +66,7 @@ flowchart LR
   G -->|clarify| X[Response Formatter]
   P & R & S & U --> X
   X --> M[Evaluate Output<br/>metrics + checks]
-  M --> L[Build Langfuse Trace] --> I[Langfuse: Ingest] --> O[Chat Response]
+  M --> L[Build Langfuse Trace] --> I[Langfuse: Traces OTel] --> S[Langfuse: Scores] --> O[Chat Response]
 ```
 
 ### 4.1 Agents and knowledge-base scoping

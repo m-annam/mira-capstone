@@ -64,6 +64,21 @@ def specialist(name, key, pos):
     return openai_node(name, pos, f"$json.global_prompt + '\\n\\n' + $json.prompts.{'planner' if key == 'planner' else key}", user)
 
 
+def langfuse_node(name, path, field, pos, otel=False):
+    # Read from "Build Langfuse Trace" by name: the Scores node's own input ($json) is the OTel response.
+    src = "$('Build Langfuse Trace').item.json"
+    p = {"method": "POST", "url": "={{ " + src + ".config.langfuse_host }}" + path,
+         "authentication": "genericCredentialType", "genericAuthType": "httpBasicAuth",
+         "sendBody": True, "specifyBody": "json", "jsonBody": "={{ JSON.stringify(" + src + "." + field + ") }}",
+         "options": {"timeout": 20000}}
+    if otel:
+        p["sendHeaders"] = True
+        p["headerParameters"] = {"parameters": [{"name": "x-langfuse-ingestion-version", "value": "4"}]}
+    return {"parameters": p, "id": nid(name), "name": name, "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2,
+            "position": pos, "onError": "continueRegularOutput",
+            "credentials": {"httpBasicAuth": {"id": "REPLACE_WITH_YOUR_LANGFUSE_CREDENTIAL", "name": "Langfuse (public key / secret key)"}}}
+
+
 def switch_rule(value, label):
     return {"conditions": {"options": {"caseSensitive": True, "leftValue": "", "typeValidation": "strict", "version": 2},
                            "conditions": [{"id": nid("rule-" + value), "leftValue": "={{ $json.route }}", "rightValue": value,
@@ -82,9 +97,9 @@ def main():
     nodes = [
         sticky("Note: Overview",
                "## Mira — AI Project Intelligence Assistant (multi-agent)\nRouter + 4 specialist agents, each with a **strictly scoped** knowledge base.\n"
-               "1. Chat (or **Run Baseline Tests**) → 2. Knowledge base + deterministic FACTS → 3. Prompt Registry (v1/v2) → 4. **Router agent** → 5. Specialist agent → 6. Formatter → 7. Metrics → 8. Langfuse trace.\n\n"
-               "**Setup:** set the *OpenAI account* credential on the 5 OpenAI nodes and a *Basic Auth* credential (user = Langfuse public key, password = secret key) on **Langfuse: Ingest**. "
-               "EU host is the default; for US change `langfuse_host` in *Project Knowledge Base*.",
+               "1. Chat (or **Run Baseline Tests**) → 2. Knowledge base + deterministic FACTS → 3. Prompt Registry (v1/v2/v3) → 4. **Router agent** → 5. Specialist agent → 6. Formatter → 7. Metrics → 8. Langfuse trace.\n\n"
+               "**Setup:** set the *OpenAI account* credential on the 5 OpenAI nodes and a *Basic Auth* credential (user = Langfuse public key, password = secret key) on **Langfuse: Traces (OTel)** and **Langfuse: Scores**. "
+               "Host is US (`us.cloud.langfuse.com`); for EU change `langfuse_host` in *Project Knowledge Base*.",
                [X(0) - 40, -520], 760, 260, 4),
         sticky("Note: Agents",
                "### Agents (system prompts in *Prompt Registry*)\n- **Router**: plan / risk / status / update / clarify (answers vague requests itself)\n"
@@ -93,7 +108,7 @@ def main():
                [X(4) - 40, -520], 520, 260, 5),
         sticky("Note: Evaluation",
                "### Metrics + tracing\n*Evaluate Output* scores every answer (ID grounding, footer, tokens, cost, latency) and, for test runs, the ground-truth checks. "
-               "*Build Langfuse Trace* sends trace + 2 generations + scores to Langfuse.",
+               "*Build Langfuse Trace* sends the trace + 2 generations via OpenTelemetry (`/api/public/otel/v1/traces`) and the scores via `/api/public/ingestion` (score-create, still supported after Langfuse's 2026-11-16 cutover).",
                [X(8) - 40, -520], 600, 200, 6),
         {"parameters": {"options": {}}, "id": nid("When chat message received"), "name": "When chat message received",
          "type": "@n8n/n8n-nodes-langchain.chatTrigger", "typeVersion": 1.1, "position": [X(0), 0], "webhookId": nid("chat-webhook")},
@@ -116,14 +131,9 @@ def main():
         code_node("Response Formatter", "format_response.js", [X(8), 0]),
         code_node("Evaluate Output", "evaluate_output.js", [X(9), 0]),
         code_node("Build Langfuse Trace", "build_langfuse_batch.js", [X(10), 0]),
-        {"parameters": {"method": "POST", "url": "={{ $json.config.langfuse_host }}/api/public/ingestion",
-                        "authentication": "genericCredentialType", "genericAuthType": "httpBasicAuth",
-                        "sendBody": True, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json.langfuse_batch) }}",
-                        "options": {"timeout": 20000}},
-         "id": nid("Langfuse: Ingest"), "name": "Langfuse: Ingest", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2,
-         "position": [X(11), 0], "onError": "continueRegularOutput",
-         "credentials": {"httpBasicAuth": {"id": "REPLACE_WITH_YOUR_LANGFUSE_CREDENTIAL", "name": "Langfuse (public key / secret key)"}}},
-        code_node("Chat Response", "chat_response.js", [X(12), 0]),
+        langfuse_node("Langfuse: Traces (OTel)", "/api/public/otel/v1/traces", "langfuse_otel", [X(11), 0], otel=True),
+        langfuse_node("Langfuse: Scores", "/api/public/ingestion", "langfuse_scores", [X(12), 0]),
+        code_node("Chat Response", "chat_response.js", [X(13), 0]),
     ]
     M = lambda *targets: [[{"node": t, "type": "main", "index": 0} for t in targets]]
     connections = {
@@ -147,8 +157,9 @@ def main():
         "Agent: Stakeholder Update": {"main": M("Response Formatter")},
         "Response Formatter": {"main": M("Evaluate Output")},
         "Evaluate Output": {"main": M("Build Langfuse Trace")},
-        "Build Langfuse Trace": {"main": M("Langfuse: Ingest")},
-        "Langfuse: Ingest": {"main": M("Chat Response")},
+        "Build Langfuse Trace": {"main": M("Langfuse: Traces (OTel)")},
+        "Langfuse: Traces (OTel)": {"main": M("Langfuse: Scores")},
+        "Langfuse: Scores": {"main": M("Chat Response")},
     }
     wf = {"name": "Mira — AI Project Intelligence Assistant (multi-agent)", "nodes": nodes, "connections": connections,
           "pinData": {}, "settings": {"executionOrder": "v1"}, "active": False,

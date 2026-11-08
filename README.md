@@ -44,8 +44,8 @@ flowchart LR
 1. **Import** `n8n/mira_workflow.json` into n8n Cloud (*Workflows → Import from File*).
 2. **Credentials:**
    - OpenAI API key on the 5 `Agent:` nodes.
-   - Basic Auth (Langfuse public key / secret key) on `Langfuse: Ingest`.
-   - For a US Langfuse project, change `langfuse_host` in *Project Knowledge Base*.
+   - Basic Auth (Langfuse public key / secret key) on `Langfuse: Traces (OTel)` and `Langfuse: Scores`.
+   - The host is US (`us.cloud.langfuse.com`); for an EU project, change `langfuse_host` in *Project Knowledge Base*.
 3. **Chat:** *Open chat* → "Which tasks are blocked or at risk of missing their deadline?"
 4. **Evaluate:** click **Run Baseline Tests** → *Execute workflow*. That runs all 23 tests; results go to *Chat Response* and Langfuse. Or, from a terminal:
    ```bash

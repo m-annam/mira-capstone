@@ -33,7 +33,7 @@ metrics: {
 }
 ```
 
-`Build Langfuse Trace` turns each request into one Langfuse ingestion batch:
+`Build Langfuse Trace` turns each request into one Langfuse trace (sent over OpenTelemetry) plus a set of scores:
 
 | Langfuse object | Name | Contents |
 |---|---|---|
@@ -43,9 +43,16 @@ metrics: {
 | Scores | `id_grounding`, `footer_compliance`, `cost_usd`, `latency_ms` | every request |
 | Scores | `baseline_pass`, `check_rate`, `route_correct` | test runs only |
 
-The batch is posted by the **Langfuse: Ingest** HTTP node to `{langfuse_host}/api/public/ingestion` with Basic auth (public key / secret key). That node is set to *continue on error*, so a tracing outage never blocks an answer. `Chat Response` reports `langfuse_logged: true/false` so you can see it.
+Two HTTP nodes send it, both with Basic auth (public key / secret key):
 
-> Note: Langfuse marks `/api/public/ingestion` as its legacy batch endpoint (it now recommends OpenTelemetry). It still works on Langfuse Cloud and needs no SDK, which is why n8n Cloud can use it directly. Moving to OTel is listed in [09-reflection-and-next-steps.md](09-reflection-and-next-steps.md).
+| Node | Endpoint | Body |
+|---|---|---|
+| **Langfuse: Traces (OTel)** | `POST {langfuse_host}/api/public/otel/v1/traces`, header `x-langfuse-ingestion-version: 4` | OTLP/HTTP JSON: a root span `mira-request` (observation type `agent`) and one `generation` span per OpenAI call. Trace name, session, tags, version and metadata are set as `langfuse.trace.*` attributes on every span; tokens and cost as `langfuse.observation.usage_details` / `cost_details`. Trace id = 32 hex chars, span ids = 16. |
+| **Langfuse: Scores** | `POST {langfuse_host}/api/public/ingestion` | `score-create` events only, on the same trace id |
+
+Why two endpoints: Langfuse Cloud stops accepting traces and generations on the legacy `/api/public/ingestion` batch endpoint on **2026-11-16**; score-create events stay supported there. The workflow was migrated before the cutover (live run #22: traces accepted, 7/7 scores accepted).
+
+Both nodes read their data from *Build Langfuse Trace* by name (`$('Build Langfuse Trace').item.json`), because the Scores node's own input is the OTel response. Both are set to *continue on error*, so a tracing outage never blocks an answer. `Chat Response` reports `langfuse_logged: true/false` and `langfuse_detail` (e.g. `traces ok (OTel), scores ok (ingestion)`) so you can see which call failed.
 
 ## 3. Running the evaluation
 
@@ -83,10 +90,10 @@ This report was produced from the offline fixtures, where 6 deliberately bad ans
 ## 5. Langfuse setup and dashboard
 
 1. Create a project at cloud.langfuse.com (EU) or us.cloud.langfuse.com (US) → *Settings → API Keys* → create a key pair.
-2. In n8n create a **Basic Auth** credential: user = public key (`pk-lf-…`), password = secret key (`sk-lf-…`). Select it on **Langfuse: Ingest**.
+2. In n8n create a **Basic Auth** credential: user = public key (`pk-lf-…`), password = secret key (`sk-lf-…`). Select it on both **Langfuse: Traces (OTel)** and **Langfuse: Scores**.
 3. Region: `langfuse_host` in the *Project Knowledge Base* node config is `https://us.cloud.langfuse.com` (this project). EU projects use `https://cloud.langfuse.com`. A wrong host returns 401 "Invalid credentials. Confirm that you've configured the correct host."
 4. Chat messages that match a ground-truth test input (case, quotes and punctuation ignored) are graded as that test, so their `test_id`, `pass`, `check_rate` and `failed_checks` are filled; other chat messages show `graded: not graded` but still get the online metrics.
-5. Note: Langfuse returns a deprecation notice for `/api/public/ingestion` — traces/generations stop being accepted on 2026-11-16 (scores continue); migrate tracing to `/api/public/otel/v1/traces`.
+5. Tracing already uses the OpenTelemetry endpoint, so Langfuse's 2026-11-16 deprecation of trace ingestion on `/api/public/ingestion` does not affect this workflow.
 6. Suggested dashboard widgets:
    - average `baseline_pass` by tag `prompt:v1` vs `prompt:v2`
    - average `id_grounding` (should stay 1.0)
