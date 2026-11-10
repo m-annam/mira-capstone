@@ -1,6 +1,6 @@
 # Q2 — Building Mira (write-up)
 
-**Author:** Srinivas Annam · **Stack:** n8n Cloud · OpenAI gpt-4o-mini · Langfuse (OpenTelemetry) · **Full detail:** [PRD](02-PRD.md), [workflow](06-n8n-workflow.md), [evaluation](07-evaluation-plan.md), [cost](08-cost-strategy.md)
+**Author:** Mallika Annam · **Stack:** n8n Cloud · OpenAI gpt-4o-mini · Langfuse (OpenTelemetry) · **Full detail:** [PRD](02-PRD.md), [workflow](06-n8n-workflow.md), [evaluation](07-evaluation-plan.md), [cost](08-cost-strategy.md)
 
 ## Design and architecture
 

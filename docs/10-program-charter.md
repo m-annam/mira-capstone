@@ -1,7 +1,7 @@
 # Q3 — Program Charter: Mira
 
 **Program:** Mira, AI project intelligence assistant for Nexora's PMs/TPMs
-**Sponsor:** CTO, Nexora Pvt. Ltd. · **Program owner:** Srinivas Annam, AI PM/TPM · **Date:** 2026-11-07 · **Status:** Draft for sponsor approval
+**Sponsor:** CTO, Nexora Pvt. Ltd. · **Program owner:** Mallika Annam, AI PM/TPM · **Date:** 2026-11-07 · **Status:** Draft for sponsor approval
 **Related:** [Ideation](00-ideation.md) · [BRD](01-BRD.md) · [PRD](02-PRD.md) · [Evaluation plan](07-evaluation-plan.md) · [Cost strategy](08-cost-strategy.md) · [Reflection](09-reflection-and-next-steps.md)
 
 ## 1. Vision
@@ -150,5 +150,5 @@ The rollout follows the phases in §4 and [reflection §6](09-reflection-and-nex
 | Role | Name | Decision | Date |
 |---|---|---|---|
 | Sponsor | CTO, Nexora | ☐ Approve ☐ Revise | |
-| Program owner | Srinivas Annam | Submitted | 2026-11-07 |
+| Program owner | Mallika Annam | Submitted | 2026-11-07 |
 | Security & legal | | ☐ Sign-off | |

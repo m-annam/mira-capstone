@@ -1,7 +1,7 @@
 # Mira — AI-Powered Project Intelligence Assistant
 
 **Interview Kickstart · Applied Agentic AI for PMs/TPMs · Capstone project**  
-Author: Srinivas Annam · Stack: **n8n Cloud** (multi-agent workflow) · **OpenAI gpt-4o-mini** · **Langfuse** (tracing and evaluation)
+Author: Mallika Annam · Stack: **n8n Cloud** (multi-agent workflow) · **OpenAI gpt-4o-mini** · **Langfuse** (tracing and evaluation)
 
 Mira helps Nexora's PMs/TPMs run the ABCDE Ltd. AI Adoption Project. From the project's own files (description, timeline, risk register and task board) it generates:
 

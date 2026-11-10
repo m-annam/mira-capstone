@@ -2,7 +2,7 @@
 
 **Product:** Mira, an AI-powered project intelligence assistant  
 **Company:** Nexora Pvt. Ltd. (IT services, London) · **First client project:** ABCDE Ltd. AI Adoption Project (24 weeks)  
-**Author:** Srinivas Annam, AI PM/TPM · **Status:** Draft for capstone review · **Related:** [PRD](02-PRD.md)
+**Author:** Mallika Annam, AI PM/TPM · **Status:** Draft for capstone review · **Related:** [PRD](02-PRD.md)
 
 ## 1. Executive summary
 

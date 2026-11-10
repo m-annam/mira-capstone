@@ -1,6 +1,6 @@
 # Q1 — Ideation: AI agents for Nexora's PMs/TPMs
 
-**Author:** Srinivas Annam, AI PM/TPM · **Context:** Nexora Pvt. Ltd. runs several client projects at once with a small PM/TPM team (problem statement). · **Related:** [BRD](01-BRD.md), [Program charter](10-program-charter.md)
+**Author:** Mallika Annam, AI PM/TPM · **Context:** Nexora Pvt. Ltd. runs several client projects at once with a small PM/TPM team (problem statement). · **Related:** [BRD](01-BRD.md), [Program charter](10-program-charter.md)
 
 Three use cases where agents remove the most PM/TPM hours or prevent the most expensive surprises. Use cases 1 and 2 are built in Mira; use case 3 is the next candidate.
 

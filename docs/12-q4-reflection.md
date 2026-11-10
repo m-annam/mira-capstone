@@ -1,6 +1,6 @@
 # Q4 — Reflection and next steps (1 page)
 
-**Author:** Srinivas Annam · Full version: [09-reflection-and-next-steps.md](09-reflection-and-next-steps.md)
+**Author:** Mallika Annam · Full version: [09-reflection-and-next-steps.md](09-reflection-and-next-steps.md)
 
 **What the traces showed.**
 - **The router over-clarified (v2).** It never sees the data, so the rule "no task data → ask" fired on every status question, and routing fell to 74%. Telling the router that the specialists have all the data, and adding 8 routing examples, fixed it (v3: 100%).
