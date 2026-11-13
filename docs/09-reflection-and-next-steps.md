@@ -36,7 +36,7 @@ Mira is a router plus five specialist agents in n8n. It turns a project's own fi
 | Done | Ran v5 three times: 68/69, routing 69/69, cost ±2% | Prove stability | [variance_v5.md](../results/variance_v5.md) |
 | Done | Fixed the T1 phase-name flake (v6): 3 runs at 69/69 | Remove the one unstable test | [variance_v6.md](../results/variance_v6.md) |
 | Done | **Timeline Advisor** agent (v7) with schedule facts computed in code; 2 new tests | Schedule questions had no owner (T11 went to Status Reporter) | 75/75 over 3 runs, [variance_v7.md](../results/variance_v7.md) |
-| Done | **Weekly status email** every Monday 8:00 PT (scheduled workflow → Mira → Gmail, draft for PM review) | BR-09 proactive reporting | Workflow built; goes live once Gmail is connected |
+| Done | **Weekly status email** every Monday 8:00 PT (scheduled workflow → Mira → Gmail, draft for PM review) | BR-09 proactive reporting | Live; test run #312 delivered the email |
 | Done | **Error handler** workflow → Langfuse ERROR trace | Failures were invisible outside n8n | Tested live, trace accepted |
 | Done | **Langfuse Prompt Management**: 7 prompts pushed, every generation linked to its prompt version | Per-prompt quality, cost and latency in Langfuse | Execution #250; trace links on #310 |
 | 1 | Add a rule check that summary rows add up to the total | Catch arithmetic slips the regexes miss | New fixture fails, live runs pass |

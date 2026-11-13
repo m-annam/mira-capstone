@@ -62,7 +62,7 @@ flowchart LR
 | 8 | Cost strategy | [docs/08-cost-strategy.md](docs/08-cost-strategy.md) |
 | 9 | Reflection and next steps | [docs/09-reflection-and-next-steps.md](docs/09-reflection-and-next-steps.md) |
 | 10 | README | this file |
-| 11 | Slide deck (capstone presentation) | Claude Slides deck *Mira — Capstone Deck* (shared separately; exportable to PDF/PPTX) |
+| 11 | Slide deck (capstone presentation) | [submission/Mira-Capstone-Deck.pdf](submission/Mira-Capstone-Deck.pdf) (11 slides) |
 
 **Problem-statement assignments (Q1–Q4) and submission items**
 
@@ -76,7 +76,8 @@ flowchart LR
 | Baseline test results (all 12 inputs + 13 edge cases) | [results/variance_v7.md](results/variance_v7.md) (current, 75/75 over 3 runs) · [results/](results/) |
 | Screenshots | [Below](#screenshots) |
 | Live demo | [Try Mira live](#try-mira-live) |
-| PDFs for upload (Q1–Q4, BRD, PRD) | [submission/](submission/) |
+| Slide deck | [submission/Mira-Capstone-Deck.pdf](submission/Mira-Capstone-Deck.pdf) |
+| PDFs for upload (Q1–Q4, BRD, PRD, deck) | [submission/](submission/) |
 
 ## Quick start
 
@@ -137,7 +138,7 @@ results/              live run outputs (jsonl), scored CSVs, reports, prompt exp
 - ✅ Real n8n 1.123: imported and executed end to end against mock OpenAI/Langfuse; chat webhook + `run_baseline.py` + `score.py` loop works
 - ✅ **Live on n8n Cloud with gpt-4o-mini:** prompt v7 (5 specialists), run three times (75 chat requests): **75/75 pass, 75/75 routing, 0 fabricated IDs, ~$0.00065 per request** — [results/variance_v7.md](results/variance_v7.md); v6 (69/69, 4.4 s average) in [results/variance_v6.md](results/variance_v6.md); v5 (68/69) in [results/variance_v5.md](results/variance_v5.md); v3 → v4 review in [results/chat_run_2026-11-07.md](results/chat_run_2026-11-07.md); v1 → v2 → v3 experiment in [results/prompt_experiment.md](results/prompt_experiment.md)
 - ✅ Langfuse (US, v4 OpenTelemetry ingestion): every chat run logs a trace with router + specialist generations (linked to Langfuse-managed prompts) and 7 scores; workflow errors log an ERROR trace
-- ✅ Weekly report workflow built and wired to Mira; it is published once the Gmail account is connected
+- ✅ Weekly status email live: published on n8n Cloud (Mondays 8:00 PT); test run #312 sent "Mira weekly status — 2026-11-13 — Amber (draft for PM review)" and it arrived in the PM's inbox
 
 Everything in `eval/` and `tests/` uses only the Python 3 standard library and Node.js; no installs are needed.
 
