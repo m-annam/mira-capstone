@@ -12,6 +12,22 @@ Mira helps Nexora's PMs/TPMs run the ABCDE Ltd. AI Adoption Project. From the pr
 
 Vague requests get clarifying questions instead of invented answers. Every request is traced and scored in Langfuse.
 
+## Try Mira live
+
+**[Open the Mira chat](https://mallika-n8n.app.n8n.cloud/webhook/e72b2f7c-1965-53a6-b80d-582a2107edb4/chat)** (no login needed)
+
+Try these, or any question about the project:
+
+- `Generate a project plan for the AI Adoption Project at ABCDE Ltd.`
+- `Which tasks are blocked or at risk of missing their deadline based on the task board?`
+- `What are the top 3 risks for the ABCDE Ltd project based on the risk data?`
+- `Generate a stakeholder update email summarizing Sprint 2 progress.`
+- `Generate a weekly status report for: "Things are going fine."` (shows how Mira handles vague input)
+
+Status answers use the reporting date 2026-04-24, because the sample task board's dates run April–August 2026. Every answer is a draft for PM review. A message that matches a ground-truth test is graded live (pass, check rate, failed checks), and every request is traced in Langfuse.
+
+![Mira answering in the public chat](screenshots/07-public-live-demo-chat.jpg)
+
 ```mermaid
 flowchart LR
   Q[PM request] --> KB[Knowledge Base + FACTS<br/>computed in code]
@@ -50,6 +66,7 @@ flowchart LR
 | Architecture diagram | Above, and [PRD §4](docs/02-PRD.md) |
 | Baseline test results (all 12 inputs + 11 edge cases) | [results/variance_v6.md](results/variance_v6.md) (current, 69/69 over 3 runs) · [results/](results/) |
 | Screenshots | [Below](#screenshots) |
+| Live demo | [Try Mira live](#try-mira-live) |
 | PDFs for upload (Q1–Q4, BRD, PRD) | [submission/](submission/) |
 
 ## Quick start

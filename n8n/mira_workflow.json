@@ -51,7 +51,15 @@
     },
     {
       "parameters": {
-        "options": {}
+        "public": true,
+        "mode": "hostedChat",
+        "authentication": "none",
+        "initialMessages": "Hi, I'm Mira, the project intelligence assistant for the ABCDE Ltd. AI Adoption Project.\nTry one of these:\n• Generate a project plan for the AI Adoption Project at ABCDE Ltd.\n• Which tasks are blocked or at risk of missing their deadline?\n• What are the top 3 risks for the ABCDE Ltd project?\n• Generate a stakeholder update email summarizing Sprint 2 progress.\n• Generate a weekly status report for: \"Things are going fine.\" (shows how I handle vague input)\nEvery answer is a draft for PM review. Reporting date: 2026-04-24.",
+        "options": {
+          "title": "Mira — AI Project Intelligence Assistant",
+          "subtitle": "Capstone demo by Mallika Annam · n8n + gpt-4o-mini + Langfuse",
+          "inputPlaceholder": "Ask about the plan, risks, status or a stakeholder update…"
+        }
       },
       "id": "0db984d5-8b04-5cc3-becf-bfed6639d967",
       "name": "When chat message received",

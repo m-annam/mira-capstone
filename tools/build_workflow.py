@@ -17,6 +17,16 @@ NS = uuid.UUID("6d1c3f0e-9a57-4f3b-8c2e-6a0a7c1d2e3f")
 nid = lambda name: str(uuid.uuid5(NS, name))  # stable node ids across rebuilds
 
 
+
+CHAT_WELCOME = ("Hi, I'm Mira, the project intelligence assistant for the ABCDE Ltd. AI Adoption Project.\n"
+    "Try one of these:\n"
+    "• Generate a project plan for the AI Adoption Project at ABCDE Ltd.\n"
+    "• Which tasks are blocked or at risk of missing their deadline?\n"
+    "• What are the top 3 risks for the ABCDE Ltd project?\n"
+    "• Generate a stakeholder update email summarizing Sprint 2 progress.\n"
+    "• Generate a weekly status report for: \"Things are going fine.\" (shows how I handle vague input)\n"
+    "Every answer is a draft for PM review. Reporting date: 2026-04-24.")
+
 def code(name):
     s = rd("n8n", "src", name)
     s = s.replace("__DESCRIPTION__", js(rd("data", "project_description.txt").strip()))
@@ -110,7 +120,13 @@ def main():
                "### Metrics + tracing\n*Evaluate Output* scores every answer (ID grounding, footer, tokens, cost, latency) and, for test runs, the ground-truth checks. "
                "*Build Langfuse Trace* sends the trace + 2 generations via OpenTelemetry (`/api/public/otel/v1/traces`) and the scores via `/api/public/ingestion` (score-create, still supported after Langfuse's 2026-11-16 cutover).",
                [X(8) - 40, -520], 600, 200, 6),
-        {"parameters": {"options": {}}, "id": nid("When chat message received"), "name": "When chat message received",
+        # Public hosted chat = the live demo link in the README (no login).
+        {"parameters": {"public": True, "mode": "hostedChat", "authentication": "none",
+                        "initialMessages": CHAT_WELCOME,
+                        "options": {"title": "Mira — AI Project Intelligence Assistant",
+                                    "subtitle": "Capstone demo by Mallika Annam · n8n + gpt-4o-mini + Langfuse",
+                                    "inputPlaceholder": "Ask about the plan, risks, status or a stakeholder update…"}},
+         "id": nid("When chat message received"), "name": "When chat message received",
          "type": "@n8n/n8n-nodes-langchain.chatTrigger", "typeVersion": 1.1, "position": [X(0), 0], "webhookId": nid("chat-webhook")},
         {"parameters": {}, "id": nid("Run Baseline Tests"), "name": "Run Baseline Tests", "type": "n8n-nodes-base.manualTrigger",
          "typeVersion": 1, "position": [X(0) - 240, 220]},
