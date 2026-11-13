@@ -2,7 +2,7 @@
 
 ## 1. What I built, and what I'd say about it in an interview
 
-Mira is a router plus four specialist agents in n8n. It turns a project's own files into plans, risk assessments, status reports and stakeholder emails. Every answer is grounded, traced in Langfuse and scored against a ground-truth dataset. The main lesson was **deciding what the LLM should not do**. Counting tasks, comparing dates and ranking risks are deterministic, so they live in code. The LLM only writes. That one decision removed the most likely failure (a wrong count reaching a client) before any prompt tuning.
+Mira is a router plus five specialist agents in n8n. It turns a project's own files into plans, risk assessments, status reports and stakeholder emails. Every answer is grounded, traced in Langfuse and scored against a ground-truth dataset. The main lesson was **deciding what the LLM should not do**. Counting tasks, comparing dates and ranking risks are deterministic, so they live in code. The LLM only writes. That one decision removed the most likely failure (a wrong count reaching a client) before any prompt tuning.
 
 ## 2. Findings from building and tracing
 
@@ -35,11 +35,15 @@ Mira is a router plus four specialist agents in n8n. It turns a project's own fi
 | Done | Fixed E5, T10 and T5 (v4); Langfuse connected, every chat run traced | Close the last failures | v4 23/23 |
 | Done | Ran v5 three times: 68/69, routing 69/69, cost ±2% | Prove stability | [variance_v5.md](../results/variance_v5.md) |
 | Done | Fixed the T1 phase-name flake (v6): 3 runs at 69/69 | Remove the one unstable test | [variance_v6.md](../results/variance_v6.md) |
+| Done | **Timeline Advisor** agent (v7) with schedule facts computed in code; 2 new tests | Schedule questions had no owner (T11 went to Status Reporter) | 75/75 over 3 runs, [variance_v7.md](../results/variance_v7.md) |
+| Done | **Weekly status email** every Monday 8:00 PT (scheduled workflow → Mira → Gmail, draft for PM review) | BR-09 proactive reporting | Workflow built; goes live once Gmail is connected |
+| Done | **Error handler** workflow → Langfuse ERROR trace | Failures were invisible outside n8n | Tested live, trace accepted |
+| Done | **Langfuse Prompt Management**: 7 prompts pushed, every generation linked to its prompt version | Per-prompt quality, cost and latency in Langfuse | Execution #250; trace links on #310 |
 | 1 | Add a rule check that summary rows add up to the total | Catch arithmetic slips the regexes miss | New fixture fails, live runs pass |
 | 1 | Add a "report as of" date input to the chat (default today) instead of the fixed CONFIG date | Real-world use | New tests with 3 different dates |
 | 1 | CSV upload in chat (n8n Chat Trigger file upload) with column validation | Use beyond the ABCDE board; BR "malformed CSV gives a clear error" | Tests with a missing-column CSV |
 | 2 | **Hierarchical orchestration** for multi-intent requests: the router returns a list of routes, and an aggregator merges the answers | Fixes E10 | E10 must cover both intents |
-| 2 | **Milestone Alert System:** a scheduled n8n run every Monday that posts at-risk milestones to Slack for PM approval | BR-09, proactive warnings | Alerts before the due date in replay tests |
+| 2 | **Milestone Alert System:** extend the Monday weekly email with at-risk milestone alerts to Slack for PM approval | BR-09, proactive warnings | Alerts before the due date in replay tests |
 | 2 | **LLM-as-judge** scorer in Langfuse for the human-review rubric (correctness, completeness, tone) on a sample of live traffic | Scales human review | Agreement with human scores ≥ 80% |
 | Done | Moved tracing from `/api/public/ingestion` to Langfuse's OpenTelemetry endpoint (scores stay on ingestion) | Langfuse stops accepting traces there on 2026-11-16 | Live run #22: traces ok, 7/7 scores accepted |
 

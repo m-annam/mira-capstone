@@ -103,6 +103,13 @@ const windowEnd = addDays(RD, CONFIG.MILESTONE_WINDOW_DAYS);
 const upcomingMilestones = phases.filter(p => p.end_date >= RD && p.end_date <= windowEnd)
   .map(p => ({ phase: p.phase, phase_name: p.phase_name, due: p.end_date, end_week: p.end_week, milestones: p.milestones_deliverables }));
 const nextAfterWindow = phases.filter(p => p.end_date > windowEnd).sort((a, b) => a.end_date < b.end_date ? -1 : 1)[0] || null;
+// Schedule position (for the Timeline Advisor): week N of the timeline, weeks left, phases done/ahead.
+const TOTAL_WEEKS = Math.max(...phases.map(p => p.end_week));
+const currentWeek = Math.floor(daysBetween(CONFIG.PROJECT_WEEK1_START, RD) / 7) + 1;
+const weeksRemaining = Math.max(0, TOTAL_WEEKS - currentWeek);
+const phasesDone = phases.filter(p => p.end_date < RD).map(p => p.phase);
+const phasesAhead = phases.filter(p => p.start_date > RD).map(p => p.phase);
+const daysToNextMilestone = upcomingMilestones.length ? daysBetween(RD, upcomingMilestones[0].due) : (nextAfterWindow ? daysBetween(RD, nextAfterWindow.end_date) : null);
 
 // ---------- risk evidence ranking ----------
 const taskById = Object.fromEntries(tasks.map(t => [t.task_id, t]));
@@ -164,6 +171,17 @@ const kb = {
     mdTable(['Rank', 'Risk ID', 'Category', 'Live signal'], riskEvidence.map(r => [r.rank, r.risk_id, r.category, r.evidence])) +
     `\nRanking rule: linked task Blocked (4) > Overdue (3) > In Progress and due within 7 days (2) > Not started and due within 14 days (1) > none (0); ties keep register order.`,
   status: `${factsBlock}\n\n## Per-sprint view\n${sprintBlock}\n\n## Source: sample_task_board.csv\n${boardTable}\n\n## Source: project_timeline.csv (phase dates)\n${timelineTable}`,
+  timeline: [
+    `SCHEDULE FACTS (computed by code for reporting date ${RD}; authoritative, do not recalculate)`,
+    `- Timeline: ${TOTAL_WEEKS} weeks, week 1 starts ${CONFIG.PROJECT_WEEK1_START}, ends ${phases.at(-1).end_date}`,
+    `- Today is in week ${currentWeek} of ${TOTAL_WEEKS}; ${weeksRemaining} weeks remain after this week`,
+    `- Current phase: ${currentPhase ? `Phase ${currentPhase.phase} ${currentPhase.phase_name} (weeks ${currentPhase.start_week}-${currentPhase.end_week}, ${currentPhase.start_date} to ${currentPhase.end_date})` : 'outside timeline'}`,
+    `- Phases finished: ${phasesDone.length ? phasesDone.map(n => 'Phase ' + n).join(', ') : 'none'}; phases not started: ${phasesAhead.length ? phasesAhead.map(n => 'Phase ' + n).join(', ') : 'none'}`,
+    `- Upcoming milestones (phase-end deliverables due ${RD} to ${windowEnd}):\n` +
+      (upcomingMilestones.length ? upcomingMilestones.map(m => `- Phase ${m.phase} ${m.phase_name}: ${m.milestones} (due ${m.due}, end of week ${m.end_week}, in ${daysBetween(RD, m.due)} days)`).join('\n') : '- none in window'),
+    `- Next milestone after the window: ${nextAfterWindow ? `Phase ${nextAfterWindow.phase} ${nextAfterWindow.phase_name}: ${nextAfterWindow.milestones_deliverables} (due ${nextAfterWindow.end_date}, end of week ${nextAfterWindow.end_week})` : 'none'}`,
+    `- Days to the next milestone: ${daysToNextMilestone ?? 'n/a'}`,
+  ].join('\n') + `\n\n## Source: project_timeline.csv (dates computed from week 1 = ${CONFIG.PROJECT_WEEK1_START})\n${timelineTable}`,
   update: `## Project\nAI Adoption Project for ABCDE Ltd. Stated goals: reduce delivery delays by 15%, lower operational costs by 10%, improve service responsiveness.\n\n${factsBlock}\n\n## Per-sprint view (use ONLY the requested sprint)\n${sprintBlock}`,
 };
 
@@ -180,6 +198,7 @@ return {
     facts: { reporting_date: RD, counts, health, health_reason: healthReason, overdue, due_soon: dueSoon, blocked,
       current_phase: currentPhase && { phase: currentPhase.phase, name: currentPhase.phase_name },
       upcoming_milestones: upcomingMilestones,
+      schedule: { current_week: currentWeek, total_weeks: TOTAL_WEEKS, weeks_remaining: weeksRemaining, phases_done: phasesDone, phases_ahead: phasesAhead },
       next_milestone_after_window: nextAfterWindow && { phase: nextAfterWindow.phase, name: nextAfterWindow.phase_name, due: nextAfterWindow.end_date, milestones: nextAfterWindow.milestones_deliverables },
       risk_ranking: riskEvidence.map(r => ({ rank: r.rank, risk_id: r.risk_id, evidence: r.evidence })),
       sprint_counts: Object.fromEntries(sprintNames.map(s => [s, bySprint[s].counts])) },

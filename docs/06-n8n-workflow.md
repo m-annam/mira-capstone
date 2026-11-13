@@ -24,10 +24,10 @@
 | # | Node | Type | What it does |
 |---|---|---|---|
 | 1 | When chat message received | Chat Trigger | Chat UI and webhook; gives `chatInput` and `sessionId` |
-| 1b | Run Baseline Tests → Baseline Test Cases | Manual Trigger → Code | Emits the 23 ground-truth tests as items (`RUN = 'all' / 'baseline' / 'edge' / ['T8']`) |
+| 1b | Run Baseline Tests → Baseline Test Cases | Manual Trigger → Code | Emits the 25 ground-truth tests as items (`RUN = 'all' / 'baseline' / 'edge' / ['T8']`) |
 | 2 | Normalize Input | Code | One shape for chat and test items; stamps `started_at` |
 | 3 | Project Knowledge Base | Code | Embedded project files → **FACTS** (counts, overdue, due soon, blocked, health, phase dates, upcoming milestones, risk evidence ranking, and per-sprint facts: health, blocked, overdue, due soon) and one **scoped KB per agent**. `CONFIG` holds the reporting date (2026-04-24), week-1 date, windows, model, prices and Langfuse host. |
-| 4 | Prompt Registry | Code | Global + router + 4 specialist prompts in versions **v6** (current, default), **v5**–**v3**, **v2** (first production) and **v1** (naive); set `PROMPT_VERSION` |
+| 4 | Prompt Registry | Code | Global + router + 5 specialist prompts in versions **v7** (current, default), **v6**–**v3**, **v2** (first production) and **v1** (naive); set `PROMPT_VERSION` |
 | 5 | Agent: Router | HTTP → OpenAI | gpt-4o-mini, temperature 0, JSON mode → `{route, reason, reply}` |
 | 6 | Parse Route | Code | Validates the route; anything malformed → `clarify` |
 | 7 | Route to Specialist | Switch | Outputs: Planner / Risk Assessor / Status Reporter / Stakeholder Update / Clarify |
@@ -62,7 +62,7 @@ The router adds `response_format: { type: 'json_object' }` and uses `router_temp
 
 | Check | Result |
 |---|---|
-| `node tests/run_workflow_offline.js good` executes every Code node and every HTTP body expression in Node.js, following the Switch and connections, with mock OpenAI answers | All 23 tests route correctly and pass; FACTS = 5/3/16/1/25, T006 overdue, T007 and T025 due soon, Amber, Phase 2 due 2026-04-26, top risks R09/R01/R05 |
+| `node tests/run_workflow_offline.js good` executes every Code node and every HTTP body expression in Node.js, following the Switch and connections, with mock OpenAI answers | All 25 tests route correctly and pass; FACTS = 5/3/16/1/25, T006 overdue, T007 and T025 due soon, Amber, Phase 2 due 2026-04-26, top risks R09/R01/R05 |
 | `node tests/run_workflow_offline.js bad` with deliberately wrong answers | All 7 bad answers are caught |
 | `python3 tests/test_checks.py` | JS and Python check engines agree on all 29 fixture answers; workflow FACTS = independent Python computation |
 | **Real n8n 1.123.x**: imported with `n8n import:workflow`, run with `n8n execute` (Run Baseline Tests), OpenAI and Langfuse pointed at a local mock server | Execution status *success*. All 18 functional nodes ran; 23 items reached Chat Response; 23 Langfuse batches posted with Basic auth; OpenAI calls sent `Bearer` auth, model `gpt-4o-mini` and JSON mode for the router |
@@ -72,12 +72,13 @@ The router adds `response_format: { type: 'json_object' }` and uses `router_temp
 | **Live chat runs** (2026-11-07): every test as its own chat message, executions #23–#91 | 69 requests, all *success*, all traced in Langfuse; v4 passes 12/12 baseline, 23/23 overall ([chat_run_2026-11-07.md](../results/chat_run_2026-11-07.md)) |
 | **Variance runs** (2026-11-07): v5, 23 tests × 3 runs, executions #92–#160 | 69 requests, all *success* and traced; 68/69 pass, 69/69 routing ([variance_v5.md](../results/variance_v5.md)) |
 | **Variance runs, v6** (2026-11-07): 23 tests × 3 runs, executions #161–#229 | 69 requests, all *success* and traced; **69/69 pass**, 69/69 routing ([variance_v6.md](../results/variance_v6.md)) |
+| **Variance runs, v7** (2026-11-13): 25 tests × 3 runs, executions #234–#309 | 75 requests, all *success* and traced; **75/75 pass**, 75/75 routing, Timeline Advisor 9/9 ([variance_v7.md](../results/variance_v7.md)) |
 
 The mock run proves the **plumbing**: nodes, expressions, routing, scoring and tracing. It does not prove answer quality. That comes from the live gpt-4o-mini run in the [evaluation plan](07-evaluation-plan.md).
 
 ## 5. Changing things safely
 
-- **Prompts:** edit `prompts/v6/*.md` (or add `prompts/v7` and list it in `tools/build_workflow.py`) → `python3 tools/build_workflow.py` → re-import. Or edit the *Prompt Registry* node directly in n8n and copy the change back into the repo.
+- **Prompts:** edit `prompts/v7/*.md` (or add `prompts/v8` and list it in `tools/build_workflow.py`) → `python3 tools/build_workflow.py` → re-import. Or edit the *Prompt Registry* node directly in n8n and copy the change back into the repo.
 - **Reporting date / windows / model / prices:** the `CONFIG` block at the top of *Project Knowledge Base*.
 - **New tests:** add them to `eval/ground_truth.json` → rebuild (they're embedded in *Baseline Test Cases*).
 - After any change: `node tests/run_workflow_offline.js && python3 tests/test_checks.py`.
@@ -89,3 +90,12 @@ The mock run proves the **plumbing**: nodes, expressions, routing, scoring and t
 3. The *Chat Response* output after **Run Baseline Tests**.
 4. A Langfuse trace showing the router and specialist generations with tokens and cost, plus the scores tab.
 5. The Langfuse trace list filtered by tag `eval:fail` (or showing that none exist).
+
+## Companion workflows (generated by `tools/build_workflow.py`)
+
+| File | Live name | Nodes | Notes |
+|---|---|---|---|
+| `n8n/mira_weekly_status_email.json` | Mira — Weekly Status Email | Schedule (Mon 8:00 America/Los_Angeles) → Weekly Request (Code) → Ask Mira (Execute Workflow → main workflow's *When called by Weekly Report* trigger) → Report to HTML (Markdown) → Build Email (Code) → Email the PM (Gmail) | Needs a Gmail OAuth credential on *Email the PM*; recipient in `WEEKLY_REPORT_TO`. Request runs with `source: weekly-schedule`, traced as `mode: scheduled`. |
+| `n8n/mira_error_handler.json` | Mira — Error Handler | Error Trigger → Build Error Trace (Code) → Langfuse: Error Trace (HTTP, OTLP) | Set as *Settings → Error workflow* of the main workflow (the error workflow must be published first). Trace `mira-error`, level ERROR, input = workflow, failed node, message, execution URL. Tested live. |
+| `n8n/mira_prompt_sync.json` | Mira — Sync Prompts to Langfuse | Manual trigger → Prompts v7 (Code) → Langfuse: Create Prompt (HTTP POST `/api/public/v2/prompts`) | Run once per prompt version. 2026-11-13 (execution #250): 7 prompts created, version 1, labels `production`, `v7`. *Build Langfuse Trace* maps repo version → Langfuse version (`LF_PROMPT_VERSION`) and sets `langfuse.observation.prompt.name/version` on each generation. |
+

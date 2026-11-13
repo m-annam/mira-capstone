@@ -7,19 +7,20 @@
 ```mermaid
 flowchart LR
   U[Chat or Run Baseline Tests] --> K[Knowledge base + FACTS<br/>computed in code]
-  K --> P[Prompt Registry v1–v6]
+  K --> P[Prompt Registry v1–v7]
   P --> R{Router agent}
   R -->|plan| PL[Planner]
   R -->|risk| RA[Risk Assessor]
   R -->|status| SR[Status Reporter]
+  R -->|timeline| TA[Timeline Advisor]
   R -->|update| SU[Stakeholder Update]
   R -->|clarify| C[Router asks for details]
-  PL & RA & SR & SU & C --> F[Formatter: sources + PM-review note]
+  PL & RA & SR & TA & SU & C --> F[Formatter: sources + PM-review note]
   F --> E[Evaluate: grounding, checks, cost]
   E --> L[Langfuse: trace + 7 scores]
 ```
 
-**Orchestration: Router / Dispatcher.** PM requests are one of four kinds (plan, risk, status, stakeholder update), and each needs different data. A router sends each request to one specialist:
+**Orchestration: Router / Dispatcher.** PM requests are one of five kinds (plan, risk, status, timeline, stakeholder update), and each needs different data. A router sends each request to one specialist:
 - **Lower cost than a sequential pipeline:** a clarify answer costs $0.00019, a full plan $0.00077.
 - **Easy to trace:** two LLM calls per request, router then specialist.
 - **One agent per pain point**, each with its own prompt.
@@ -32,11 +33,12 @@ The rejected options:
 - **Planner:** description and timeline.
 - **Risk Assessor:** risk register, plus a ranking of risks by live task evidence.
 - **Status Reporter:** task board, timeline and per-sprint facts.
+- **Timeline Advisor** (added in v7): timeline plus schedule facts (current week, weeks left, phases done and ahead).
 - **Stakeholder Update:** goals and per-sprint view.
 
 Counts, overdue and due-soon tasks, health, milestone dates and risk ranking are **computed in JavaScript, not by the LLM**. The prompts tell the model to use those facts as given.
 
-**Human review.** Every answer ends with its sources and "Draft for PM review", and nothing is sent automatically.
+**Human review.** Every answer ends with its sources and "Draft for PM review", and nothing is sent automatically except the Monday status email to the PM herself, which is labelled "draft for PM review".
 
 **Tool choices**
 
@@ -50,19 +52,22 @@ Counts, overdue and due-soon tasks, health, milestone dates and risk ranking are
 
 ## Implementation
 
-| Capability | Status | Evidence (live, v6) |
+| Capability | Status | Evidence (live, v6/v7) |
 |---|---|---|
 | Project plan (core) | ✅ | T1: 8 named phases, dates, milestones; goals quoted exactly |
 | Risk assessment (core) | ✅ | T3: all 10 register risks categorized with mitigations; T7: top 3 by evidence (R09, R01, R05) |
+| Timeline and milestones (v7) | ✅ | T11, E12, E13 via the Timeline Advisor: week 4 of 24, Phase 5 dates, next milestone |
 | Weekly status report (core) | ✅ | T5: Sprint 3 only, real task names, Phase 2 milestone; T8: T024 blocked, T006 overdue |
 | Stakeholder Update Generator (extended) | ✅ | T12 leadership email (Sprint 2 only); E9 client email without owner names |
 | Vague-input handling | ✅ | T2, T4, T6, T9 ask for scope, goals, timeline and team; no invented plan |
 | Observability | ✅ | Every request traced in Langfuse; scores: id_grounding, footer, cost, latency, baseline_pass, check_rate, route_correct |
-| Baseline dataset | ✅ | All 12 inputs + 11 edge cases, 151 checks; results in [`results/`](../results) |
+| Proactive weekly report | ✅ | Monday 8:00 PT schedule → Mira → Gmail to the PM (draft for review) |
+| Error handling | ✅ | Error workflow sends failed executions to Langfuse as ERROR traces |
+| Baseline dataset | ✅ | All 12 inputs + 13 edge cases, 164 checks; results in [`results/`](../results) |
 
 ## Cost and evaluation
 
-**Cost per request** (measured over 3 runs, gpt-4o-mini list prices):
+**Cost per request** (measured over the 3 v6 runs, gpt-4o-mini list prices; v7 averages $0.00065):
 
 | Request | Cost | Latency |
 |---|---|---|
@@ -73,20 +78,20 @@ Counts, overdue and due-soon tasks, health, milestone dates and risk ranking are
 | Clarifying question | $0.00019 | 1.8 s |
 | **Average, all 69** | **$0.00066** | 4.4 s (median 3.2 s) |
 
-At 100 requests per PM per month, that is about $0.07 per PM, far below the $5 target. The 23-test suite costs $0.015 to run.
+At 100 requests per PM per month, that is about $0.07 per PM, far below the $5 target. The 25-test suite costs $0.016 to run.
 
 **Metrics** (definitions in [04-metrics.md](04-metrics.md)):
 
-| Metric | Target | v1 naive | v3 | **v6 (3 runs)** |
+| Metric | Target | v1 naive | v3 | **v7 (3 runs)** |
 |---|---|---|---|---|
 | Baseline pass rate (T1–T12) | ≥ 11/12 | 7/12 | 12/12 | **36/36** |
-| All-tests pass rate | — | 52% | 96% | **69/69 (100%)** |
+| All-tests pass rate | — | 52% | 96% | **75/75 (100%)** |
 | Routing accuracy | ≥ 95% | 78% | 100% | **100%** |
 | Fabricated IDs | 0 | 0 | 0 | **0** |
-| Cost per request | < $0.01 | $0.00067 | $0.00062 | **$0.00066** |
+| Cost per request | < $0.01 | $0.00067 | $0.00062 | **$0.00065** |
 
 **Observations**
 1. **Facts computed in code prevent fabricated data.** Even naive v1 prompts never invented an ID. But only prompt boundaries stopped the misuse of real data: v1 adopted a user's 30% goal and put owner names in a client email.
 2. **The router can't see the data, so it must be told the data exists.** v2 over-asked for clarification on 6 answerable status questions. The v3 router prompt fixed this: routing went from 74% to 100%.
 3. **Passing checks can hide wrong answers.** Reading every answer found T10 missing the Blocked count and T5 mixing project and sprint health. The checks were tightened. T5 was fixed only once per-sprint facts were computed in code; the prompt alone was not enough.
-4. **One run is not enough.** Three runs of v5 showed T1 dropping phase names 1 time in 3. A one-line rule (v6) fixed it, and v6 passed 69/69.
+4. **One run is not enough.** Three runs of v5 showed T1 dropping phase names 1 time in 3. A one-line rule (v6) fixed it, and v6 passed 69/69. Adding a fifth agent (v7, Timeline Advisor) kept it at 75/75 over 25 tests.

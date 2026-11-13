@@ -1,0 +1,97 @@
+{
+  "name": "Mira — Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "77d26762-0034-5112-8d0e-16c42023e993",
+      "name": "When a Mira workflow fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================================\n// Mira | Workflow \"Mira — Error Handler\" | Node: \"Build Error Trace\"\n// Runs when any Mira workflow fails (n8n Error Trigger). Sends one ERROR-level\n// trace to Langfuse over OpenTelemetry so failures show up next to normal runs.\n// ============================================================================\nconst e = $json.execution || {}, w = $json.workflow || {}, err = e.error || {};\nconst hex = n => Array.from({ length: n }, () => (Math.random() * 16 | 0).toString(16)).join('');\nconst now = (BigInt(Date.now()) * 1000000n).toString();\nconst str = (key, v) => ({ key, value: { stringValue: String(v ?? '') } });\nconst arr = (key, vs) => ({ key, value: { arrayValue: { values: vs.map(v => ({ stringValue: String(v) })) } } });\nconst detail = {\n  workflow: w.name, workflow_id: w.id, execution_id: e.id, execution_url: e.url,\n  failed_node: e.lastNodeExecuted || err.node?.name || '', mode: e.mode, message: err.message, description: err.description || '',\n};\nconst span = {\n  traceId: hex(32), spanId: hex(16), name: 'mira-error', kind: 1,\n  startTimeUnixNano: now, endTimeUnixNano: now, status: { code: 2, message: String(err.message || 'error') },\n  attributes: [\n    str('langfuse.trace.name', 'mira-error'),\n    arr('langfuse.trace.tags', ['mira', 'error', `workflow:${w.name || 'unknown'}`]),\n    str('langfuse.trace.metadata.workflow', w.name),\n    str('langfuse.trace.metadata.failed_node', detail.failed_node),\n    str('langfuse.observation.type', 'span'),\n    str('langfuse.observation.level', 'ERROR'),\n    str('langfuse.observation.status_message', err.message),\n    str('langfuse.observation.input', JSON.stringify(detail)),\n    str('langfuse.observation.output', String(err.stack || err.message || '').slice(0, 4000)),\n  ],\n};\nreturn [{ json: { ...detail, otel: { resourceSpans: [{ resource: { attributes: [str('service.name', 'mira-n8n')] },\n  scopeSpans: [{ scope: { name: 'mira-error-handler' }, spans: [span] }] }] } } }];\n"
+      },
+      "id": "b4930ef4-365f-52e1-b4a2-d7a736e54bce",
+      "name": "Build Error Trace",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://us.cloud.langfuse.com/api/public/otel/v1/traces",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.otel) }}",
+        "options": {
+          "timeout": 20000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-langfuse-ingestion-version",
+              "value": "4"
+            }
+          ]
+        }
+      },
+      "id": "a0856f2f-26da-5976-a2b9-db67b2251f3e",
+      "name": "Langfuse: Error Trace",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_YOUR_LANGFUSE_CREDENTIAL",
+          "name": "Langfuse (public key / secret key)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When a Mira workflow fails": {
+      "main": [
+        [
+          {
+            "node": "Build Error Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Error Trace": {
+      "main": [
+        [
+          {
+            "node": "Langfuse: Error Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "tags": []
+}

@@ -15,6 +15,8 @@ rd = lambda *p: open(os.path.join(ROOT, *p), encoding="utf-8").read()
 js = lambda s: json.dumps(s, ensure_ascii=False)
 NS = uuid.UUID("6d1c3f0e-9a57-4f3b-8c2e-6a0a7c1d2e3f")
 nid = lambda name: str(uuid.uuid5(NS, name))  # stable node ids across rebuilds
+MAIN_WORKFLOW_ID = "N7xYy18Untlea5YX"          # the live Mira workflow on n8n Cloud
+WEEKLY_REPORT_TO = "mallika.annam@gmail.com"   # who gets the Monday report
 
 
 
@@ -34,7 +36,9 @@ def code(name):
     s = s.replace("__RISKS_CSV__", js(rd("data", "project_risks.csv")))
     s = s.replace("__TASKS_CSV__", js(rd("data", "sample_task_board.csv")))
     if "__PROMPTS__" in s:
-        prompts = {v: {k: rd("prompts", v, f"{k}.md").strip() for k in ["global", "router", "planner", "risk", "status", "update"]} for v in ["v1", "v2", "v3", "v4", "v5", "v6"]}
+        keys = ["global", "router", "planner", "risk", "status", "timeline", "update"]
+        prompts = {v: {k: rd("prompts", v, f"{k}.md").strip() for k in keys if os.path.exists(os.path.join(ROOT, "prompts", v, f"{k}.md"))}
+                   for v in ["v1", "v2", "v3", "v4", "v5", "v6", "v7"]}
         s = s.replace("__PROMPTS__", json.dumps(prompts, indent=2, ensure_ascii=False))
     if "__TEST_CASES__" in s:
         tests = json.load(open(os.path.join(ROOT, "eval", "ground_truth.json"), encoding="utf-8"))["tests"]
@@ -128,6 +132,8 @@ def main():
                                     "inputPlaceholder": "Ask about the plan, risks, status or a stakeholder update…"}},
          "id": nid("When chat message received"), "name": "When chat message received",
          "type": "@n8n/n8n-nodes-langchain.chatTrigger", "typeVersion": 1.1, "position": [X(0), 0], "webhookId": nid("chat-webhook")},
+        {"parameters": {"inputSource": "passthrough"}, "id": nid("When called by Weekly Report"), "name": "When called by Weekly Report",
+         "type": "n8n-nodes-base.executeWorkflowTrigger", "typeVersion": 1.1, "position": [X(0) - 240, 440]},
         {"parameters": {}, "id": nid("Run Baseline Tests"), "name": "Run Baseline Tests", "type": "n8n-nodes-base.manualTrigger",
          "typeVersion": 1, "position": [X(0) - 240, 220]},
         code_node("Baseline Test Cases", "baseline_test_cases.js", [X(0), 220], per_item=False),
@@ -137,13 +143,15 @@ def main():
         openai_node("Agent: Router", [X(4), 0], "$json.prompts.router", "$json.chatInput", json_mode=True, temp_expr="$json.config.router_temperature"),
         code_node("Parse Route", "parse_route.js", [X(5), 0]),
         {"parameters": {"rules": {"values": [switch_rule("plan", "Planner"), switch_rule("risk", "Risk Assessor"),
-                                             switch_rule("status", "Status Reporter"), switch_rule("update", "Stakeholder Update"),
+                                             switch_rule("status", "Status Reporter"), switch_rule("timeline", "Timeline Advisor"),
+                                             switch_rule("update", "Stakeholder Update"),
                                              switch_rule("clarify", "Clarify")]}, "options": {}},
          "id": nid("Route to Specialist"), "name": "Route to Specialist", "type": "n8n-nodes-base.switch", "typeVersion": 3.2, "position": [X(6), 0]},
         specialist("Agent: Planner", "planner", [X(7), -360]),
         specialist("Agent: Risk Assessor", "risk", [X(7), -180]),
         specialist("Agent: Status Reporter", "status", [X(7), 0]),
-        specialist("Agent: Stakeholder Update", "update", [X(7), 180]),
+        specialist("Agent: Timeline Advisor", "timeline", [X(7), 180]),
+        specialist("Agent: Stakeholder Update", "update", [X(7), 360]),
         code_node("Response Formatter", "format_response.js", [X(8), 0]),
         code_node("Evaluate Output", "evaluate_output.js", [X(9), 0]),
         code_node("Build Langfuse Trace", "build_langfuse_batch.js", [X(10), 0]),
@@ -154,6 +162,7 @@ def main():
     M = lambda *targets: [[{"node": t, "type": "main", "index": 0} for t in targets]]
     connections = {
         "When chat message received": {"main": M("Normalize Input")},
+        "When called by Weekly Report": {"main": M("Normalize Input")},
         "Run Baseline Tests": {"main": M("Baseline Test Cases")},
         "Baseline Test Cases": {"main": M("Normalize Input")},
         "Normalize Input": {"main": M("Project Knowledge Base")},
@@ -165,11 +174,13 @@ def main():
             [{"node": "Agent: Planner", "type": "main", "index": 0}],
             [{"node": "Agent: Risk Assessor", "type": "main", "index": 0}],
             [{"node": "Agent: Status Reporter", "type": "main", "index": 0}],
+            [{"node": "Agent: Timeline Advisor", "type": "main", "index": 0}],
             [{"node": "Agent: Stakeholder Update", "type": "main", "index": 0}],
             [{"node": "Response Formatter", "type": "main", "index": 0}]]},
         "Agent: Planner": {"main": M("Response Formatter")},
         "Agent: Risk Assessor": {"main": M("Response Formatter")},
         "Agent: Status Reporter": {"main": M("Response Formatter")},
+        "Agent: Timeline Advisor": {"main": M("Response Formatter")},
         "Agent: Stakeholder Update": {"main": M("Response Formatter")},
         "Response Formatter": {"main": M("Evaluate Output")},
         "Evaluate Output": {"main": M("Build Langfuse Trace")},
@@ -184,6 +195,94 @@ def main():
     with open(out, "w", encoding="utf-8") as f:
         json.dump(wf, f, indent=2, ensure_ascii=False)
     print(f"wrote {out}: {len(nodes)} nodes, {sum(len(v['main']) for v in connections.values())} connection groups")
+    weekly()
+
+
+def weekly():
+    """Mira — Weekly Status Email: every Monday 08:00 (Pacific) ask Mira for the
+    weekly report and email it to the PM as a draft."""
+    def node(name, typ, ver, params, pos, **extra):
+        return {"parameters": params, "id": nid("weekly:" + name), "name": name, "type": typ, "typeVersion": ver, "position": pos, **extra}
+    nodes = [
+        node("Every Monday 8:00", "n8n-nodes-base.scheduleTrigger", 1.2,
+             {"rule": {"interval": [{"field": "weeks", "triggerAtDay": [1], "triggerAtHour": 8}]}}, [0, 0]),
+        node("Weekly Request", "n8n-nodes-base.code", 2, {"jsCode": rd("n8n", "src", "weekly_request.js")}, [240, 0]),
+        node("Ask Mira", "n8n-nodes-base.executeWorkflow", 1.2,
+             {"workflowId": {"__rl": True, "value": MAIN_WORKFLOW_ID, "mode": "id"}, "options": {"waitForSubWorkflow": True}}, [480, 0]),
+        node("Report to HTML", "n8n-nodes-base.markdown", 1,
+             {"mode": "markdownToHtml", "markdown": "={{ $json.output }}", "destinationKey": "html", "options": {"tables": True}}, [720, 0]),
+        node("Build Email", "n8n-nodes-base.code", 2, {"mode": "runOnceForEachItem", "jsCode": rd("n8n", "src", "weekly_email.js")}, [960, 0]),
+        node("Email the PM", "n8n-nodes-base.gmail", 2.1,
+             {"sendTo": WEEKLY_REPORT_TO, "subject": "={{ $json.subject }}", "emailType": "html", "message": "={{ $json.html }}",
+              "options": {"appendAttribution": False}}, [1200, 0], webhookId=nid("weekly:gmail")),
+    ]
+    names = [n["name"] for n in nodes]
+    connections = {a: {"main": [[{"node": b, "type": "main", "index": 0}]]} for a, b in zip(names, names[1:])}
+    wf = {"name": "Mira — Weekly Status Email", "nodes": nodes, "connections": connections, "pinData": {},
+          "settings": {"executionOrder": "v1", "timezone": "America/Los_Angeles"}, "active": False, "tags": []}
+    out = os.path.join(ROOT, "n8n", "mira_weekly_status_email.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(wf, f, indent=2, ensure_ascii=False)
+    print(f"wrote {out}: {len(nodes)} nodes")
+    error_handler()
+    prompt_sync()
+
+
+def error_handler():
+    """Mira — Error Handler: set as the error workflow of the Mira workflows;
+    logs each failure to Langfuse as an ERROR-level trace."""
+    nodes = [
+        {"parameters": {}, "id": nid("error:trigger"), "name": "When a Mira workflow fails",
+         "type": "n8n-nodes-base.errorTrigger", "typeVersion": 1, "position": [0, 0]},
+        {"parameters": {"jsCode": rd("n8n", "src", "error_trace.js")}, "id": nid("error:build"), "name": "Build Error Trace",
+         "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [240, 0]},
+        langfuse_node("Langfuse: Error Trace", "/api/public/otel/v1/traces", "otel", [480, 0], otel=True),
+    ]
+    # This workflow's data is the failure itself, not a Mira request: point the URL at the US host directly.
+    nodes[2]["parameters"]["url"] = "https://us.cloud.langfuse.com/api/public/otel/v1/traces"
+    nodes[2]["parameters"]["jsonBody"] = "={{ JSON.stringify($json.otel) }}"
+    nodes[2]["id"] = nid("error:langfuse")
+    names = [n["name"] for n in nodes]
+    connections = {a: {"main": [[{"node": b, "type": "main", "index": 0}]]} for a, b in zip(names, names[1:])}
+    wf = {"name": "Mira — Error Handler", "nodes": nodes, "connections": connections, "pinData": {},
+          "settings": {"executionOrder": "v1"}, "active": False, "tags": []}
+    out = os.path.join(ROOT, "n8n", "mira_error_handler.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(wf, f, indent=2, ensure_ascii=False)
+    print(f"wrote {out}: {len(nodes)} nodes")
+
+
+
+LANGFUSE_PROMPT_VERSION = "v7"   # the repo's prompt version pushed to Langfuse Prompt Management
+
+
+def prompt_sync():
+    """Mira — Sync Prompts to Langfuse: run by hand after a new prompt version.
+    Pushes prompts/<version>/*.md to Langfuse Prompt Management as text prompts
+    named mira-<agent>, labelled production + <version>. The repo stays the source
+    of truth; Langfuse gets a versioned copy that traces link to."""
+    v = LANGFUSE_PROMPT_VERSION
+    items = [{"name": f"mira-{k}", "prompt": rd("prompts", v, f"{k}.md").strip(), "labels": ["production", v],
+              "tags": ["mira"], "commitMessage": f"Mira prompts {v} from GitHub m-annam/mira-capstone"}
+             for k in ["global", "router", "planner", "risk", "status", "timeline", "update"]]
+    code_js = "// Mira | Prompts to push to Langfuse (generated from prompts/" + v + " by tools/build_workflow.py)\nreturn " + json.dumps(items, ensure_ascii=False, indent=1) + ".map(p => ({ json: p }));\n"
+    lf = langfuse_node("Langfuse: Create Prompt", "/api/public/v2/prompts", "", [480, 0])
+    lf["parameters"]["url"] = "https://us.cloud.langfuse.com/api/public/v2/prompts"
+    lf["parameters"]["jsonBody"] = "={{ JSON.stringify({ name: $json.name, type: 'text', prompt: $json.prompt, labels: $json.labels, tags: $json.tags, commitMessage: $json.commitMessage }) }}"
+    lf["id"] = nid("sync:langfuse")
+    nodes = [
+        {"parameters": {}, "id": nid("sync:trigger"), "name": "Run sync", "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [0, 0]},
+        {"parameters": {"jsCode": code_js}, "id": nid("sync:prompts"), "name": f"Prompts {v}", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [240, 0]},
+        lf,
+    ]
+    names = [n["name"] for n in nodes]
+    connections = {a: {"main": [[{"node": b, "type": "main", "index": 0}]]} for a, b in zip(names, names[1:])}
+    wf = {"name": "Mira — Sync Prompts to Langfuse", "nodes": nodes, "connections": connections, "pinData": {},
+          "settings": {"executionOrder": "v1"}, "active": False, "tags": []}
+    out = os.path.join(ROOT, "n8n", "mira_prompt_sync.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(wf, f, indent=2, ensure_ascii=False)
+    print(f"wrote {out}: {len(nodes)} nodes")
 
 
 if __name__ == "__main__":

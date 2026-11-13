@@ -16,7 +16,7 @@
 |---|---|---|---|
 | Routing | Does the right agent answer? | M3, M6, M7 | Route vs expected route per test |
 | Grounding | Does it invent anything? | M4, M5, check failures | Automated checks + human spot check |
-| Task quality | Does the answer contain what the problem statement requires? | M1, M2 | 151 ground-truth checks |
+| Task quality | Does the answer contain what the problem statement requires? | M1, M2 | 164 ground-truth checks |
 | Format | Does every answer follow the template and carry the review note? | M8 | Formatter flag |
 | Ops | Is it fast and cheap? | M9, M10 | Langfuse timings and usage |
 | Robustness | Edge cases, injection, missing data, multi-intent | M1 on E1–E11 | Edge-case dataset |
@@ -93,7 +93,7 @@ Three batch runs of the full dataset (23 tests) plus one interactive chat test. 
 
 Batch latency (p50 ≈ 20 s) is the wall-clock time for all 23 items moving through the workflow together, not per-request latency; the single chat request above is the representative number.
 
-**Exit criteria (§ top): met by v3, by v4 with the tightened checks (23/23), and by v6 across three runs (69/69)** — 12/12 baseline, 0 fabricated IDs, counts exact (T10), 100% routing, 3.5 s per request, $0.0006 per request.
+**Exit criteria (§ top): met by v3, by v4 with the tightened checks (23/23), by v6 across three runs (69/69), and by v7 with 25 tests (75/75)** — 12/12 baseline, 0 fabricated IDs, counts exact (T10), 100% routing, 3.5 s per request, $0.0006 per request.
 
 ### What changed between versions (the prompt experiment)
 
@@ -107,6 +107,7 @@ Batch latency (p50 ≈ 20 s) is the wall-clock time for all 23 items moving thro
 
 | **v5** (2026-11-07) | v4 + two fixes from reviewing the v4 answers | Sprint reports keep the project milestones (T5 had dropped Phase 2, due 2026-04-26); Stakeholder Update names the data files in Sources (T12/E9 said "Project Knowledge Base"). New checks `milestone` and `sources_files`; v4 re-graded with them: 20/23. |
 | **v6** (2026-11-07) | v5 + one Planner rule | Phase column = number **and** name ("1 Project Initiation"); fixes the T1 flake found by the v5 variance runs. |
+| **v7** (2026-11-13) | v6 + a fifth specialist | Router gets a `timeline` route; new **Timeline Advisor** answers phase/week/milestone questions from the timeline plus schedule facts computed in code (week 4 of 24, 20 weeks left). T11 moves from Status Reporter to Timeline Advisor; new tests E12, E13. 3 runs × 25 tests: **75/75**. |
 
 **v3 → v4, live chat runs** (each test its own chat message; [results/chat_run_2026-11-07.md](../results/chat_run_2026-11-07.md)):
 
@@ -130,6 +131,8 @@ Batch latency (p50 ≈ 20 s) is the wall-clock time for all 23 items moving thro
 22 of 23 tests passed in every run, routing never changed, and cost varied by under 2%. The one flaky test is **T1**: in run 1 the plan's phase table had phase numbers but no phase names (check rate 0.47). The Planner prompt asks for a `Phase` column without saying "number and name", so at temperature 0.2 the model occasionally drops the name. One run per prompt change is not enough evidence; three runs exposed it.
 
 **v6, three identical runs** — [results/variance_v6.md](../results/variance_v6.md): one Planner rule ("Phase column = number and name") → **69/69 pass (36/36 baseline), 69/69 routing, 0 fabricated IDs**, T1 named all 8 phases in every run, 3.2 s median / 4.4 s average, $0.0453 for 69 requests. Only optional checks still fail (E3 by decision, E6 30% call-out, E10 multi-intent), identically in every run.
+
+**v7, three identical runs** — [results/variance_v7.md](../results/variance_v7.md): a fifth agent (Timeline Advisor) and two new tests → **75/75 pass (36/36 baseline), 75/75 routing, 0 fabricated IDs, $0.00065 per request**. T11, E12 and E13 routed to the Timeline Advisor with 100% checks in all three runs. Average latency rose to 7.5 s, but every test (including 50-token clarify replies) slowed by a similar factor with unchanged token counts, so the cause is API throughput on the day, not the prompt.
 
 **Lesson: checks that pass can still hide wrong answers.** v3 originally scored 12/12 because two checks were too loose: T10's `blocked1` regex matched "1 blocked task" in the health sentence, and nothing checked T5's sprint scope. Both checks were tightened (`blocked1` must be its own count line or row; new `scope_health`), the real v3 T5 answer was added to the bad fixtures, and v3 re-graded drops to 10/12. Also: the prompt alone fixed T10 and E5 but not T5 — the model kept copying T006 from the project-wide overdue list. Computing the sprint's own facts in code fixed it, the same pattern as the original FACTS design.
 

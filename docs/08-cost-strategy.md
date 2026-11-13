@@ -26,6 +26,7 @@ Prices change. Re-check them before quoting numbers to stakeholders. `config.pri
 | v4 chat run, 23 tests one message each (execs #69–#91, 2026-11-07) | 23 | — | — | $0.0150 | $0.00065 |
 | v5 variance runs, 23 tests × 3 (execs #92–#160, 2026-11-07) | 69 | — | — | $0.0453 | $0.00066 |
 | v6 variance runs, 23 tests × 3 (execs #161–#229, 2026-11-07) | 69 | — | — | $0.0453 | $0.00066 |
+| v7 variance runs, 25 tests × 3 (execs #234–#309, 2026-11-13) | 75 | — | — | $0.0491 | $0.00065 |
 
 v3 costs more per request than v2 only because v2 wrongly short-circuited 6 answerable questions at the cheap router; v3 answers them with the Status Reporter (~4,750 input tokens). The whole 3-version evaluation (69 requests) cost about **$0.04**. Measured numbers match the model below.
 
@@ -88,3 +89,10 @@ At the BRD's base estimate of about 11 hours saved per PM per month, a PM costin
 - An alert if the average cost per request goes above $0.005 (5× normal). That usually means a prompt or KB grew by accident.
 - The `cost_usd` score on every trace, and `avg_cost_per_request_usd` in `eval/score.py` reports. Prompt changes are compared on quality **and** cost.
 - An OpenAI project spending limit (for example $10/month for the pilot) as a hard cap.
+
+## Weekly report and companion workflows
+
+- **Weekly status email:** one status request per week (~$0.0011, the cost of a full status report) plus one Gmail send: about **$0.005 per PM per month**. It uses 2 n8n executions per week (the schedule workflow and the Mira call).
+- **Error handler:** runs only when an execution fails; no LLM call, one Langfuse trace.
+- **Prompt sync:** run once per prompt version; no LLM call, 7 Langfuse API calls.
+

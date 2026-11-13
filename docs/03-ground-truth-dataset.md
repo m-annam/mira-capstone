@@ -2,7 +2,7 @@
 
 **Files:** [`eval/ground_truth.json`](../eval/ground_truth.json) (machine-readable, used by n8n and `eval/score.py`) · [`eval/ground_truth.csv`](../eval/ground_truth.csv) (readable) · [`eval/compute_expected.py`](../eval/compute_expected.py) (how every expected value was derived)
 
-The dataset has **23 test cases**: the 12 provided baseline inputs (T1–T12) and 11 edge cases (E1–E11). Together they carry **151 checks**. Each test has:
+The dataset has **25 test cases**: the 12 provided baseline inputs (T1–T12) and 13 edge cases (E1–E13). Together they carry **164 checks**. Each test has:
 
 - the exact input
 - the expected route
@@ -46,7 +46,7 @@ Risk ranking: [('R09', 4), ('R01', 3), ('R05', 2), ('R06', 1), ('R07', 1), ('R10
 | T8 | Blocked or at-risk tasks | status | T024 blocked (security team); T006 overdue; T007 and T025 due soon | T024, "blocked", T006, due-date check, IDs grounded |
 | T9 | Plan for a 2-week project, no details | clarify | Asks scope, goals, deliverables; no plan | insufficient, scope, goals, deliverables, no plan table |
 | T10 | Task counts by status | status | 5 Done, 3 In Progress, 16 To Do, 1 Blocked, 25 total | each count by regex (Blocked 1 must be its own count line or row), total 25 |
-| T11 | Milestones in the next 2 weeks | status | Phase 2 audit report and gap analysis report due 2026-04-26; next: Phase 3 (2026-05-10) | audit report, gap analysis report, date/week, no invented phases |
+| T11 | Milestones in the next 2 weeks | timeline (status before v7) | Phase 2 audit report and gap analysis report due 2026-04-26; next: Phase 3 (2026-05-10) | audit report, gap analysis report, date/week, no invented phases |
 | T12 | Stakeholder email for Sprint 2 | update | Subject; T004 and T005 done, T006 in progress/overdue; no Sprint 3+ | subject, T004/T005/T006, no T007–T025 IDs or names, no fake %, Sources line names the data files |
 
 ## Edge cases (E1–E11)
@@ -66,6 +66,8 @@ These go beyond the provided dataset to test boundaries, adversarial input and k
 | E9 | Client audience | Client-facing update… on Sprint 3. | Sprint 3 only; no internal owner names |
 | E10 | Multi-intent | Top 3 risks and the current task counts. | Known limitation: the router picks one agent; answer must stay grounded |
 | E11 | Blocked task lookup | What is the status of task T024? | Blocked, waiting for security team, James Wong |
+| E12 | Where are we in the schedule (v7) | Which phase is the project in right now, and how many weeks of the timeline are left? | Phase 2 Current State Analysis, week 4 of 24, 20 weeks left (route `timeline`) |
+| E13 | Phase dates lookup (v7) | When does Phase 5 Pilot Implementation start and end, and what will it deliver? | 2026-06-08 to 2026-07-05, weeks 11–14, pilot results report (route `timeline`) |
 
 ## Check types
 
@@ -78,7 +80,7 @@ These go beyond the provided dataset to test boundaries, adversarial input and k
 | `percents_allowed` | Every N% in the output is in the allowed list | T1: only 15% and 10% |
 | `min_distinct` | At least N distinct matches | T7: ≥ 3 risk IDs |
 
-The checks were validated with 23 hand-written "good" answers, all of which pass, and 7 "bad" answers that reproduce typical failures:
+The checks were validated with 25 hand-written "good" answers, all of which pass, and 7 "bad" answers that reproduce typical failures:
 
 - the problem statement's "3 Done" count
 - Sprint 3 tasks leaking into the Sprint 2 email

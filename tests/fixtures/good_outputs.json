@@ -40,8 +40,8 @@
   "output": "**Project status (Amber)**\n- Done: 5\n- In Progress: 3\n- To Do: 16\n- Blocked: 1\n- Total: 25\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
  },
  "T11": {
-  "route": "status",
-  "output": "Upcoming milestones (2026-04-24 to 2026-05-08): Phase 2 Current State Analysis — Current systems audit report; Gap analysis report (due 2026-04-26, end of week 4).\nNext after the window: Phase 3 Use Case Selection — final list of prioritized use cases (due 2026-05-10).\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+  "route": "timeline",
+  "output": "Upcoming milestones (2026-04-24 to 2026-05-08): Phase 2 Current State Analysis — Current systems audit report; Gap analysis report (due 2026-04-26, end of week 4).\nNext after the window: Phase 3 Use Case Selection — final list of prioritized use cases (due 2026-05-10).\n\n_Sources: project_timeline.csv_\n_Draft for PM review — verify before sharing._"
  },
  "T12": {
   "route": "update",
@@ -90,5 +90,13 @@
  "E11": {
   "route": "status",
   "output": "T024 Security review of AI infrastructure is Blocked — waiting for security team availability. Owner James Wong, Sprint 5, due 2026-05-26.\n\n_Sources: sample_task_board.csv, project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E12": {
+  "route": "timeline",
+  "output": "We are in week 4 of 24, in Phase 2 Current State Analysis (weeks 3-4, 2026-04-13 to 2026-04-26); 20 weeks remain after this week.\nPhase 1 Project Initiation is finished; Phases 3-8 have not started. Dates assume week 1 starts 2026-03-30.\n\n_Sources: project_timeline.csv_\n_Draft for PM review — verify before sharing._"
+ },
+ "E13": {
+  "route": "timeline",
+  "output": "Phase 5 Pilot Implementation runs weeks 11-14, from 2026-06-08 to 2026-07-05 (dates assume week 1 starts 2026-03-30).\nKey activities: deploy AI models in test environments; monitor performance.\nDeliverables: Pilot results report; User feedback and performance metrics.\n\n_Sources: project_timeline.csv_\n_Draft for PM review — verify before sharing._"
  }
 }

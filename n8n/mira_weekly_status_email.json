@@ -1,0 +1,177 @@
+{
+  "name": "Mira — Weekly Status Email",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "fdd8d33d-29ff-5cad-b8e2-5fe261b5fec7",
+      "name": "Every Monday 8:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================================\n// Mira | Workflow \"Mira — Weekly Status Email\" | Node: \"Weekly Request\"\n// The question the schedule asks Mira every Monday.\n// ============================================================================\nconst today = new Date().toISOString().slice(0, 10);\nreturn [{ json: {\n  chatInput: 'Generate a weekly status report for the whole project: overall health with its reason, task counts, blocked, overdue and due-soon tasks, and milestones due in the next 14 days.',\n  sessionId: `weekly-${today}`,\n  source: 'weekly-schedule',\n} }];\n"
+      },
+      "id": "ba14f4fb-bbdc-53a2-abc5-f7335daf3625",
+      "name": "Weekly Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "N7xYy18Untlea5YX",
+          "mode": "id"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "db19cdd1-03b3-56fa-a8a2-b28169205287",
+      "name": "Ask Mira",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}",
+        "destinationKey": "html",
+        "options": {
+          "tables": true
+        }
+      },
+      "id": "e0c7971e-d0e7-5185-bcac-1a71496caa4c",
+      "name": "Report to HTML",
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================================\n// Mira | Workflow \"Mira — Weekly Status Email\" | Node: \"Build Email\" (Run Once for Each Item)\n// Input: Mira's Chat Response for the scheduled request, plus `html` from the\n// Markdown node. Output: subject + HTML body for the Gmail node.\n// The report is a DRAFT for the PM: it goes to the PM, never straight to the client.\n// ============================================================================\nconst j = $json;\nconst today = new Date().toISOString().slice(0, 10);\nconst health = (String(j.output || '').match(/\\b(Green|Amber|Red)\\b/) || [])[1];\nconst subject = `Mira weekly status — ${today}${health ? ` — ${health}` : ''} (draft for PM review)`;\nconst html = `<div style=\"font-family:Arial,sans-serif;max-width:760px;color:#14213D\">\n<p style=\"color:#4A5568;font-size:13px\">Scheduled report from Mira, the project intelligence assistant for the ABCDE Ltd. AI Adoption Project.\nIt is a draft for PM review: check it before sharing. Status uses the project's reporting date.</p>\n${j.html || ''}\n<hr style=\"border:none;border-top:1px solid #ddd;margin-top:24px\">\n<p style=\"color:#4A5568;font-size:12px\">Route: ${j.route} · agent: ${j.agent} · cost: $${j.cost_usd} · latency: ${j.latency_ms} ms · Langfuse trace: ${j.trace_id} · ${j.langfuse_detail || ''}</p>\n</div>`;\nreturn { json: { subject, html, trace_id: j.trace_id } };\n"
+      },
+      "id": "1b16b198-d793-5433-bdc6-6e8e71e37474",
+      "name": "Build Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "mallika.annam@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "693af7d6-d171-55ef-ab42-634b31911f34",
+      "name": "Email the PM",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1200,
+        0
+      ],
+      "webhookId": "9f50f555-7abd-56be-8cf1-6896d0286a87"
+    }
+  ],
+  "connections": {
+    "Every Monday 8:00": {
+      "main": [
+        [
+          {
+            "node": "Weekly Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Request": {
+      "main": [
+        [
+          {
+            "node": "Ask Mira",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Mira": {
+      "main": [
+        [
+          {
+            "node": "Report to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report to HTML": {
+      "main": [
+        [
+          {
+            "node": "Build Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email": {
+      "main": [
+        [
+          {
+            "node": "Email the PM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles"
+  },
+  "active": false,
+  "tags": []
+}

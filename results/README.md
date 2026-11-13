@@ -10,7 +10,9 @@
 | `scored_v*_run*.csv` | Per-test scores per run |
 | `chat_run_2026-11-07.md` | **Chat runs (2026-11-07):** every test as its own chat message; v3 → v4 prompt → v4 final (23/23); manual review findings |
 | `chat_run_2026-11-07.jsonl`, `chat_run_v4_prompt_only.jsonl`, `chat_run_v4_final.jsonl` | Raw outputs + every Chat Response field for those runs |
-| `variance_v6.md` | **Current prompts (v6) run three times: 69/69** |
+| `variance_v7.md` | **Current prompts (v7, with the Timeline Advisor agent) run three times: 75/75** |
+| `chat_run_v7_run1..3.jsonl` | Raw outputs + every Chat Response field for the three v7 runs |
+| `variance_v6.md` | v6 run three times: 69/69 (23 tests) |
 | `chat_run_v6_run1..3.jsonl` | Raw outputs + every Chat Response field for the three v6 runs |
 | `variance_v5.md` | v5 run three times: 68/69, per-test stability, latency and cost per run |
 | `chat_run_v5_run1..3.jsonl` | Raw outputs + every Chat Response field for the three v5 runs |

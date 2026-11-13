@@ -659,14 +659,14 @@
       "type": "baseline",
       "category": "Timeline",
       "input": "What milestones are coming up in the next 2 weeks based on the timeline?",
-      "expected_route": "status",
+      "expected_route": "timeline",
       "expected_output": "Within 2026-04-24 to 2026-05-08: Phase 2 Current State Analysis deliverables - Current systems audit report and Gap analysis report (due 2026-04-26, end of week 4). Next after the window: Phase 3 Use Case Selection - final list of prioritized use cases with success criteria (due 2026-05-10, end of week 6). No invented milestones.",
       "checks": [
         {
           "id": "route",
           "type": "route",
-          "value": "status",
-          "label": "routed to status"
+          "value": "timeline",
+          "label": "routed to timeline"
         },
         {
           "id": "audit",
@@ -1251,6 +1251,105 @@
           "type": "regex",
           "pattern": "James Wong",
           "label": "owner"
+        },
+        {
+          "id": "grounded",
+          "type": "ids_grounded",
+          "label": "every task/risk ID exists in the data"
+        }
+      ]
+    },
+    {
+      "test_id": "E12",
+      "type": "edge",
+      "category": "Timeline",
+      "input": "Which phase is the project in right now, and how many weeks of the timeline are left?",
+      "expected_route": "timeline",
+      "expected_output": "Week 4 of 24 (reporting date 2026-04-24): Phase 2 Current State Analysis (weeks 3-4, 2026-04-13 to 2026-04-26). 20 weeks remain after this week. Phase 1 is finished; Phases 3-8 have not started. No task statuses.",
+      "checks": [
+        {
+          "id": "route",
+          "type": "route",
+          "value": "timeline",
+          "label": "routed to timeline"
+        },
+        {
+          "id": "phase",
+          "type": "regex",
+          "pattern": "Phase 2|Current State Analysis",
+          "label": "current phase is Phase 2 Current State Analysis"
+        },
+        {
+          "id": "week",
+          "type": "regex",
+          "pattern": "week 4\\b",
+          "flags": "i",
+          "label": "week 4 of the timeline"
+        },
+        {
+          "id": "left",
+          "type": "regex",
+          "pattern": "\\b20 weeks",
+          "flags": "i",
+          "label": "20 weeks remain"
+        },
+        {
+          "id": "fake",
+          "type": "not_regex",
+          "pattern": "Phase (9|1\\d)|week (2[5-9]|[3-9]\\d)",
+          "label": "no invented phases/weeks"
+        },
+        {
+          "id": "grounded",
+          "type": "ids_grounded",
+          "label": "every task/risk ID exists in the data"
+        }
+      ]
+    },
+    {
+      "test_id": "E13",
+      "type": "edge",
+      "category": "Timeline",
+      "input": "When does Phase 5 Pilot Implementation start and end, and what will it deliver?",
+      "expected_route": "timeline",
+      "expected_output": "Phase 5 Pilot Implementation: weeks 11-14, 2026-06-08 to 2026-07-05 (dates assume week 1 starts 2026-03-30). Activities: deploy AI models in test environments; monitor performance. Deliverables: pilot results report; user feedback and performance metrics.",
+      "checks": [
+        {
+          "id": "route",
+          "type": "route",
+          "value": "timeline",
+          "label": "routed to timeline"
+        },
+        {
+          "id": "start",
+          "type": "regex",
+          "pattern": "2026-06-08|June 8",
+          "label": "start date 2026-06-08"
+        },
+        {
+          "id": "end",
+          "type": "regex",
+          "pattern": "2026-07-05|July 5",
+          "label": "end date 2026-07-05"
+        },
+        {
+          "id": "weeks",
+          "type": "regex",
+          "pattern": "11\\s*(-|–|to)\\s*14",
+          "label": "weeks 11-14"
+        },
+        {
+          "id": "deliverable",
+          "type": "regex",
+          "pattern": "pilot results report",
+          "flags": "i",
+          "label": "pilot results report deliverable"
+        },
+        {
+          "id": "fake",
+          "type": "not_regex",
+          "pattern": "Phase (9|1\\d)|week (2[5-9]|[3-9]\\d)",
+          "label": "no invented phases/weeks"
         },
         {
           "id": "grounded",

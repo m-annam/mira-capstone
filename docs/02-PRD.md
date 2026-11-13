@@ -1,11 +1,11 @@
 # Mira — Product Requirements Document (PRD)
 
 **Author:** Mallika Annam, AI PM/TPM · **Implements:** [BRD](01-BRD.md) · **Build:** n8n Cloud + OpenAI gpt-4o-mini + Langfuse  
-**Workflow:** [`n8n/mira_workflow.json`](../n8n/mira_workflow.json) · **Prompts:** [`prompts/v6`](../prompts/v6) (current; v5–v1 kept for the experiment)
+**Workflow:** [`n8n/mira_workflow.json`](../n8n/mira_workflow.json) · **Prompts:** [`prompts/v7`](../prompts/v7) (current, also in Langfuse Prompt Management; v6–v1 kept for the experiment)
 
 ## 1. Overview, goals and non-goals
 
-Mira is a multi-agent assistant, built in n8n, that answers PM/TPM requests about a project using only that project's own files. A **Router agent** classifies each request by intent. It either answers vague requests itself with clarifying questions, or hands the request to one of four specialists: **Planner**, **Risk Assessor**, **Status Reporter** or **Stakeholder Update**. A **Response Formatter** returns the result as structured Markdown with sources and a PM-review note. Every request is traced and scored in **Langfuse**.
+Mira is a multi-agent assistant, built in n8n, that answers PM/TPM requests about a project using only that project's own files. A **Router agent** classifies each request by intent. It either answers vague requests itself with clarifying questions, or hands the request to one of five specialists: **Planner**, **Risk Assessor**, **Status Reporter**, **Timeline Advisor** or **Stakeholder Update**. A **Response Formatter** returns the result as structured Markdown with sources and a PM-review note. Every request is traced and scored in **Langfuse**.
 
 **Goals**
 
@@ -62,6 +62,7 @@ flowchart LR
   G -->|plan| P[Agent: Planner]
   G -->|risk| R[Agent: Risk Assessor]
   G -->|status| S[Agent: Status Reporter]
+  G -->|timeline| TA[Agent: Timeline Advisor]
   G -->|update| U[Agent: Stakeholder Update]
   G -->|clarify| X[Response Formatter]
   P & R & S & U --> X
@@ -79,6 +80,7 @@ This follows the course's multi-agent solution pattern. Each specialist gets **o
 | Agent: Planner | OpenAI (temp 0.2) | `project_description.txt` + `project_timeline.csv` (with computed dates) | Plans come from scope and phases, not task statuses |
 | Agent: Risk Assessor | OpenAI (temp 0.2) | `project_description.txt` + `project_risks.csv` + Current Evidence table (risk → live task signal, ranked) | Risks stay in the register; evidence only ranks them |
 | Agent: Status Reporter | OpenAI (temp 0.2) | `sample_task_board.csv` + timeline dates + FACTS + per-sprint view | Status needs tasks and dates, never risks |
+| Agent: Timeline Advisor | OpenAI (temp 0.2) | `project_timeline.csv` + SCHEDULE FACTS (current week, weeks left, phases done/ahead, days to next milestone) | Schedule questions need dates, not tasks or risks |
 | Agent: Stakeholder Update | OpenAI (temp 0.2) | Goals + FACTS + per-sprint view | Emails summarize progress for one sprint only |
 
 **Design decisions**
@@ -95,6 +97,7 @@ This follows the course's multi-agent solution pattern. Each specialist gets **o
 |---|---|
 | plan → Planner | Create or outline a project plan, phases, activities, milestones, deliverables, schedule or roadmap for the loaded project |
 | risk → Risk Assessor | Risk assessment, risk matrix, top risks, categories, impacts or mitigations for the loaded project |
+| timeline → Timeline Advisor | Which phase/week we are in, weeks remaining, phase dates and deliverables, milestones in a date window |
 | status → Status Reporter | Weekly or sprint status, task counts, blocked/overdue/at-risk tasks, deadlines, upcoming milestones, task owners, health, sprint comparisons |
 | update → Stakeholder Update | An email or update written for stakeholders, leadership, the client or engineering |
 | clarify → Router replies | A plan / risk / status request for a different, new or unnamed project described only by a short phrase; greetings, goodbyes, off-topic. Everything else about the loaded project goes to a specialist, even if the answer is not in the data (v3 change after live run 1 — see [07 §6](07-evaluation-plan.md)). Prompt-injection text is ignored and routing uses the underlying intent. |
@@ -149,14 +152,14 @@ Acceptance criteria map to the ground-truth tests in [03-ground-truth-dataset.md
 - *Evaluate Output* computes these online metrics for every request: ID grounding, footer compliance, tokens, cost and latency.
 - For test runs it also computes ground-truth check results.
 - *Build Langfuse Trace* sends one trace per request, made of a router generation, a specialist generation and the scores.
-- *Run Baseline Tests* sends all 23 tests through the same pipeline with one click.
+- *Run Baseline Tests* sends all 25 tests through the same pipeline with one click.
 
 ## 6. Grounding rules and input data
 
 | File | Contents | Used by |
 |---|---|---|
 | `project_description.txt` | Scope, goals (15% fewer delays, 10% lower cost), phased approach, task force | Planner, Risk Assessor |
-| `project_timeline.csv` | 8 phases over 24 weeks, activities, milestones | Planner, Status Reporter |
+| `project_timeline.csv` | 8 phases over 24 weeks, activities, milestones | Planner, Status Reporter, Timeline Advisor |
 | `project_risks.csv` | 10 risks (R01–R10) with category, impact, mitigation | Risk Assessor |
 | `sample_task_board.csv` | 25 tasks (T001–T025) with status, owner, sprint, due date | Status Reporter, Stakeholder Update, Risk evidence |
 
@@ -183,7 +186,7 @@ Acceptance criteria map to the ground-truth tests in [03-ground-truth-dataset.md
 
 ## 8. Evaluation summary
 
-There are 12 baseline tests and 11 edge cases, with 151 machine-checkable criteria. These are scored by the same engine in n8n (JS) and in `eval/score.py` (Python). The exit bar is ≥ 11/12 baseline passes and zero fabricated IDs. The plan is in [07-evaluation-plan.md](07-evaluation-plan.md); metrics are in [04-metrics.md](04-metrics.md).
+There are 12 baseline tests and 13 edge cases, with 164 machine-checkable criteria. These are scored by the same engine in n8n (JS) and in `eval/score.py` (Python). The exit bar is ≥ 11/12 baseline passes and zero fabricated IDs. The plan is in [07-evaluation-plan.md](07-evaluation-plan.md); metrics are in [04-metrics.md](04-metrics.md).
 
 ## 9. Decisions on earlier open questions
 
@@ -203,3 +206,10 @@ There are 12 baseline tests and 11 edge cases, with 151 machine-checkable criter
 | 2. Internal pilot (weeks 3–4) | 3 PMs on ABCDE data | ≥ 70% outputs sent with minor/no edits |
 | 3. Pilot expansion (weeks 5–6) | 10 PMs/TPMs, a second project | 8/10 weekly users; security sign-off |
 | 4. General availability | All Nexora PMs | Next: Milestone Alert System, Trello API, fine-tuning on corrected outputs |
+
+## Added after the build (2026-11-13)
+
+- **Timeline Advisor agent** (5th specialist, prompt v7): see the agent table above.
+- **Proactive weekly report:** a separate workflow (`n8n/mira_weekly_status_email.json`) runs every Monday 8:00 America/Los_Angeles, calls Mira through an *Execute Workflow* trigger with a fixed status request, and emails the answer to the PM via Gmail, subject `Mira weekly status — <date> — <health> (draft for PM review)`. It runs as `mode: scheduled`, so it is traced like any request.
+- **Error handler:** `n8n/mira_error_handler.json` is the main workflow's *Error workflow*; any failed execution sends a Langfuse trace `mira-error` (level ERROR) with the failed node, message and execution link.
+- **Prompt management:** `n8n/mira_prompt_sync.json` pushes the current prompts to Langfuse as `mira-global`, `mira-router`, `mira-planner`, `mira-risk`, `mira-status`, `mira-timeline`, `mira-update` (labels `production` and the repo version). Every router and specialist generation is linked to its Langfuse prompt version, so Langfuse reports quality, cost and latency per prompt.

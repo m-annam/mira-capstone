@@ -60,9 +60,9 @@ function mockOpenAI(bodyStr, test, isRouter) {
 
 // --- run all tests through the graph ------------------------------------------
 const testItems = runCode('Baseline Test Cases', {}, {});
-assert(Array.isArray(testItems) && testItems.length === 23, `23 test items (got ${testItems.length})`);
+assert(Array.isArray(testItems) && testItems.length === 25, `25 test items (got ${testItems.length})`);
 const switchRules = node('Route to Specialist').parameters.rules.values.map(r => r.conditions.conditions[0].rightValue);
-const SPECIALIST = { plan: 'Agent: Planner', risk: 'Agent: Risk Assessor', status: 'Agent: Status Reporter', update: 'Agent: Stakeholder Update' };
+const SPECIALIST = { plan: 'Agent: Planner', risk: 'Agent: Risk Assessor', status: 'Agent: Status Reporter', timeline: 'Agent: Timeline Advisor', update: 'Agent: Stakeholder Update' };
 const rows = [];
 for (const { json: t } of testItems) {
   const store = {};

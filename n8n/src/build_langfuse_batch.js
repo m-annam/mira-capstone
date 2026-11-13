@@ -22,6 +22,12 @@ const rootId = hex(16);
 
 // ---- OTLP attribute helpers ----
 const str = (key, v) => ({ key, value: { stringValue: typeof v === 'string' ? v : JSON.stringify(v) } });
+const int = (key, v) => ({ key, value: { intValue: String(v) } });
+// Link generations to Langfuse Prompt Management (prompts pushed by "Mira — Sync Prompts to Langfuse").
+const LF_PROMPT_VERSION = { v7: 1 };   // repo prompt version -> Langfuse prompt version
+const LF_PROMPT_NAME = { router: 'mira-router', plan: 'mira-planner', risk: 'mira-risk', status: 'mira-status', timeline: 'mira-timeline', update: 'mira-update' };
+const promptLink = key => (LF_PROMPT_VERSION[j.prompt_version] && LF_PROMPT_NAME[key])
+  ? [str('langfuse.observation.prompt.name', LF_PROMPT_NAME[key]), int('langfuse.observation.prompt.version', LF_PROMPT_VERSION[j.prompt_version])] : [];
 const arr = (key, vs) => ({ key, value: { arrayValue: { values: vs.map(v => ({ stringValue: String(v) })) } } });
 const tags = ['mira', `route:${j.route}`, `prompt:${j.prompt_version}`, j.mode];
 if (j.test_id) tags.push(`test:${j.test_id}`);
@@ -44,12 +50,12 @@ const span = ({ name, spanId, parent, start, end, attrs }) => ({
   traceId, spanId, ...(parent ? { parentSpanId: parent } : {}), name, kind: 1,
   startTimeUnixNano: nanos(start), endTimeUnixNano: nanos(end), attributes: [...traceAttrs, ...attrs], status: { code: 1 },
 });
-const generation = (name, model, u, input, output, start, end, extra = []) => span({
+const generation = (name, model, u, input, output, start, end, extra = [], promptKey = null) => span({
   name, spanId: hex(16), parent: rootId, start, end,
   attrs: [str('langfuse.observation.type', 'generation'), str('langfuse.observation.model.name', String(model || j.config.model)),
     str('langfuse.observation.input', input), str('langfuse.observation.output', output),
     ...(u ? [str('langfuse.observation.usage_details', usage(u)), str('langfuse.observation.cost_details', cost(u))] : []),
-    str('langfuse.observation.metadata.prompt_version', String(j.prompt_version)), ...extra],
+    str('langfuse.observation.metadata.prompt_version', String(j.prompt_version)), ...promptLink(promptKey), ...extra],
 });
 
 const spans = [
@@ -58,11 +64,11 @@ const spans = [
       str('langfuse.observation.metadata.agent', String(j.agent)), str('langfuse.observation.metadata.router_reason', String(j.router_reason || '')),
       str('langfuse.observation.metadata.check_results', j.check_results || [])] }),
   generation('agent:router', j.router_model, j.router_usage, j.chatInput,
-    { route: j.route, reason: j.router_reason, reply: j.router_reply }, j.started_at, j.router_done_at),
+    { route: j.route, reason: j.router_reason, reply: j.router_reply }, j.started_at, j.router_done_at, [], 'router'),
 ];
 if (j.route !== 'clarify') {
   spans.push(generation(`agent:${j.route}`, j.specialist_model, j.specialist_usage, j.chatInput, j.output, j.router_done_at, j.finished_at,
-    [str('langfuse.observation.metadata.footer_added_by_formatter', String(j.footer_added))]));
+    [str('langfuse.observation.metadata.footer_added_by_formatter', String(j.footer_added))], j.route));
 }
 const langfuse_otel = { resourceSpans: [{
   resource: { attributes: [str('service.name', 'mira-n8n')] },

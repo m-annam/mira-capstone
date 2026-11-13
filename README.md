@@ -8,7 +8,10 @@ Mira helps Nexora's PMs/TPMs run the ABCDE Ltd. AI Adoption Project. From the pr
 - **project plans**
 - **risk assessments**
 - **weekly status reports**
+- **timeline and milestone answers**
 - **stakeholder update emails**
+
+It also emails the PM a **weekly status report every Monday** (draft for review), logs **workflow failures to Langfuse**, and keeps its **prompts versioned in Langfuse Prompt Management**.
 
 Vague requests get clarifying questions instead of invented answers. Every request is traced and scored in Langfuse.
 
@@ -22,6 +25,7 @@ Try these, or any question about the project:
 - `Which tasks are blocked or at risk of missing their deadline based on the task board?`
 - `What are the top 3 risks for the ABCDE Ltd project based on the risk data?`
 - `Generate a stakeholder update email summarizing Sprint 2 progress.`
+- `Which phase is the project in right now, and how many weeks of the timeline are left?`
 - `Generate a weekly status report for: "Things are going fine."` (shows how Mira handles vague input)
 
 Status answers use the reporting date 2026-04-24, because the sample task board's dates run April–August 2026. Every answer is a draft for PM review. A message that matches a ground-truth test is graded live (pass, check rate, failed checks), and every request is traced in Langfuse.
@@ -35,9 +39,13 @@ flowchart LR
   R -->|plan| P[Planner]
   R -->|risk| K[Risk Assessor]
   R -->|status| S[Status Reporter]
+  R -->|timeline| T[Timeline Advisor]
   R -->|update| U[Stakeholder Update]
   R -->|vague| C[Clarifying questions]
-  P & K & S & U & C --> F[Formatter] --> E[Metrics] --> L[(Langfuse)]
+  P & K & S & T & U & C --> F[Formatter] --> E[Metrics] --> L[(Langfuse)]
+  W[Monday 8:00 schedule] -.->|weekly report request| Q
+  F -.->|weekly report| G[Gmail to PM]
+  X[Any workflow failure] -.-> EH[Error handler] -.-> L
 ```
 
 ## Deliverables
@@ -54,6 +62,7 @@ flowchart LR
 | 8 | Cost strategy | [docs/08-cost-strategy.md](docs/08-cost-strategy.md) |
 | 9 | Reflection and next steps | [docs/09-reflection-and-next-steps.md](docs/09-reflection-and-next-steps.md) |
 | 10 | README | this file |
+| 11 | Slide deck (capstone presentation) | Claude Slides deck *Mira — Capstone Deck* (shared separately; exportable to PDF/PPTX) |
 
 **Problem-statement assignments (Q1–Q4) and submission items**
 
@@ -64,26 +73,26 @@ flowchart LR
 | Q3 Program charter: vision, scope, success criteria, timeline, risks, stakeholders, decision-making, rollout | [docs/10-program-charter.md](docs/10-program-charter.md) |
 | Q4 Reflection (1 page) | [docs/12-q4-reflection.md](docs/12-q4-reflection.md) · full version [docs/09](docs/09-reflection-and-next-steps.md) |
 | Architecture diagram | Above, and [PRD §4](docs/02-PRD.md) |
-| Baseline test results (all 12 inputs + 11 edge cases) | [results/variance_v6.md](results/variance_v6.md) (current, 69/69 over 3 runs) · [results/](results/) |
+| Baseline test results (all 12 inputs + 13 edge cases) | [results/variance_v7.md](results/variance_v7.md) (current, 75/75 over 3 runs) · [results/](results/) |
 | Screenshots | [Below](#screenshots) |
 | Live demo | [Try Mira live](#try-mira-live) |
 | PDFs for upload (Q1–Q4, BRD, PRD) | [submission/](submission/) |
 
 ## Quick start
 
-1. **Import** `n8n/mira_workflow.json` into n8n Cloud (*Workflows → Import from File*).
+1. **Import** `n8n/mira_workflow.json` into n8n Cloud (*Workflows → Import from File*). Optional companions: `n8n/mira_weekly_status_email.json` (Monday report by Gmail), `n8n/mira_error_handler.json` (failures → Langfuse; set it as the main workflow's *Error workflow*), `n8n/mira_prompt_sync.json` (pushes the current prompts to Langfuse Prompt Management).
 2. **Credentials:**
-   - OpenAI API key on the 5 `Agent:` nodes.
+   - OpenAI API key on the 6 `Agent:` nodes.
    - Basic Auth (Langfuse public key / secret key) on `Langfuse: Traces (OTel)` and `Langfuse: Scores`.
    - The host is US (`us.cloud.langfuse.com`); for an EU project, change `langfuse_host` in *Project Knowledge Base*.
 3. **Chat:** *Open chat* → "Which tasks are blocked or at risk of missing their deadline?"
-4. **Evaluate:** click **Run Baseline Tests** → *Execute workflow*. That runs all 23 tests; results go to *Chat Response* and Langfuse. Or, from a terminal:
+4. **Evaluate:** click **Run Baseline Tests** → *Execute workflow*. That runs all 25 tests; results go to *Chat Response* and Langfuse. Or, from a terminal:
    ```bash
    export N8N_CHAT_URL="https://<you>.app.n8n.cloud/webhook/<id>/chat"   # Chat Trigger → Make Chat Publicly Available
    python3 eval/run_baseline.py --out results/baseline_v2.jsonl
    python3 eval/score.py results/baseline_v2.jsonl --md results/report_v2.md
    ```
-5. **Prompt experiment:** set `PROMPT_VERSION = 'v1'` (or any of `'v2'`–`'v5'`) in *Prompt Registry*, re-run, then `python3 eval/score.py results/baseline_v1_run3.jsonl --compare results/baseline_v3_run2.jsonl`.
+5. **Prompt experiment:** set `PROMPT_VERSION = 'v1'` (or any of `'v2'`–`'v6'`) in *Prompt Registry*, re-run, then `python3 eval/score.py results/baseline_v1_run3.jsonl --compare results/baseline_v3_run2.jsonl`.
 
 Full setup: [docs/06-n8n-workflow.md](docs/06-n8n-workflow.md).
 
@@ -91,12 +100,13 @@ Full setup: [docs/06-n8n-workflow.md](docs/06-n8n-workflow.md).
 
 | Concept | Mandatory? | How Mira applies it |
 |---|---|---|
-| Multi-agent system design | Mandatory | Router + Planner, Risk Assessor, Status Reporter, Stakeholder Update, each with a strictly scoped knowledge base ([PRD §4.1](docs/02-PRD.md)) |
+| Multi-agent system design | Mandatory | Router + Planner, Risk Assessor, Status Reporter, Timeline Advisor, Stakeholder Update, each with a strictly scoped knowledge base ([PRD §4.1](docs/02-PRD.md)) |
 | Orchestration pattern | Mandatory | **Router / Dispatcher**, justified in [PRD §4](docs/02-PRD.md); hierarchical is the next step for multi-intent requests |
-| Prompt engineering | Mandatory | Guide-style prompts (Global Context/Rules → Your Data → How to Answer → Boundaries) in [prompts/v6](prompts/v6); earlier versions down to the naive [v1](prompts/v1) kept — live experiment v1 52% → v2 65% → v3 96% → v5 98.6% → v6 100% (3 runs each) |
+| Prompt engineering | Mandatory | Guide-style prompts (Global Context/Rules → Your Data → How to Answer → Boundaries) in [prompts/v7](prompts/v7), also versioned in **Langfuse Prompt Management** (`mira-*`, labels `production`/`v7`; every generation is linked to its prompt); earlier versions down to the naive [v1](prompts/v1) kept — live experiment v1 52% → v2 65% → v3 96% → v5 98.6% → v6 100% → v7 100% with a 5th agent (3 runs each) |
 | Data grounding | Mandatory | KB built only from the 4 files; counts, dates and risk ranking computed in code; every T###/R## checked against the data on every request |
-| Evaluation and observability | Mandatory | Langfuse traces (router + specialist generations, tokens, cost, latency) and scores; 23-test dataset with 151 checks |
-| Human-in-the-loop | Extended | Every answer is a "Draft for PM review"; nothing is sent automatically |
+| Evaluation and observability | Mandatory | Langfuse traces (router + specialist generations, tokens, cost, latency) and scores; 25-test dataset with 164 checks; failures traced by an error-handler workflow |
+| Human-in-the-loop | Extended | Every answer is a "Draft for PM review"; the only automatic message is the Monday report to the PM herself, labelled "draft for PM review" |
+| Proactive agent | Extended | Scheduled workflow asks Mira for the weekly status every Monday 8:00 PT and emails it to the PM |
 | Extended capability | ≥ 1 required | **Stakeholder Update Generator** (leadership / engineering / client) |
 | Fine-tuning | Extended | Plan in [reflection §4](docs/09-reflection-and-next-steps.md) |
 
@@ -108,8 +118,9 @@ Full setup: [docs/06-n8n-workflow.md](docs/06-n8n-workflow.md).
 
 ```
 data/                 source files from the problem statement (description, timeline, risks, task board, eval inputs)
-prompts/v6 … v1      system prompts (v6 current, v2 first production, v1 naive baseline)
+prompts/v7 … v1      system prompts (v7 current, v2 first production, v1 naive baseline)
 n8n/mira_workflow.json  the importable workflow (generated)
+n8n/mira_weekly_status_email.json, mira_error_handler.json, mira_prompt_sync.json  companion workflows (generated)
 n8n/src/*.js          Code-node sources (knowledge base + FACTS, router parsing, formatter, metrics, Langfuse trace)
 tools/build_workflow.py  rebuilds the workflow JSON from data + prompts + src + ground truth
 eval/                 ground truth, check engine, run_baseline.py, score.py, compute_expected.py
@@ -121,11 +132,12 @@ results/              live run outputs (jsonl), scored CSVs, reports, prompt exp
 
 ## Verification status
 
-- ✅ Workflow logic: `node tests/run_workflow_offline.js` (23/23 routed and scored; FACTS correct) and `node tests/run_workflow_offline.js bad` (all 7 bad answers caught)
+- ✅ Workflow logic: `node tests/run_workflow_offline.js` (25/25 routed and scored; FACTS correct) and `node tests/run_workflow_offline.js bad` (all 7 bad answers caught)
 - ✅ Check engines: `python3 tests/test_checks.py` (JS ⇄ Python parity on 29 fixture answers; FACTS = independent Python computation)
 - ✅ Real n8n 1.123: imported and executed end to end against mock OpenAI/Langfuse; chat webhook + `run_baseline.py` + `score.py` loop works
-- ✅ **Live on n8n Cloud with gpt-4o-mini:** prompt v6, run three times (69 chat requests): **69/69 pass, 69/69 routing, 0 fabricated IDs, 3.2 s median / 4.4 s average and ~$0.00066 per request** — [results/variance_v6.md](results/variance_v6.md); v5 (68/69) in [results/variance_v5.md](results/variance_v5.md); v3 → v4 review in [results/chat_run_2026-11-07.md](results/chat_run_2026-11-07.md); v1 → v2 → v3 experiment in [results/prompt_experiment.md](results/prompt_experiment.md)
-- ✅ Langfuse (US, v4 OpenTelemetry ingestion): every chat run logs a trace with router + specialist generations and 7 scores
+- ✅ **Live on n8n Cloud with gpt-4o-mini:** prompt v7 (5 specialists), run three times (75 chat requests): **75/75 pass, 75/75 routing, 0 fabricated IDs, ~$0.00065 per request** — [results/variance_v7.md](results/variance_v7.md); v6 (69/69, 4.4 s average) in [results/variance_v6.md](results/variance_v6.md); v5 (68/69) in [results/variance_v5.md](results/variance_v5.md); v3 → v4 review in [results/chat_run_2026-11-07.md](results/chat_run_2026-11-07.md); v1 → v2 → v3 experiment in [results/prompt_experiment.md](results/prompt_experiment.md)
+- ✅ Langfuse (US, v4 OpenTelemetry ingestion): every chat run logs a trace with router + specialist generations (linked to Langfuse-managed prompts) and 7 scores; workflow errors log an ERROR trace
+- ✅ Weekly report workflow built and wired to Mira; it is published once the Gmail account is connected
 
 Everything in `eval/` and `tests/` uses only the Python 3 standard library and Node.js; no installs are needed.
 
@@ -137,7 +149,7 @@ Everything in `eval/` and `tests/` uses only the Python 3 standard library and N
 
 ## Screenshots
 
-**n8n workflow canvas** — router, four specialist agents, metrics and the two Langfuse nodes:
+**n8n workflow canvas** — router, specialist agents, metrics and the two Langfuse nodes:
 
 ![n8n workflow canvas](screenshots/01-n8n-workflow-canvas.png)
 

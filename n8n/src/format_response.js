@@ -5,7 +5,7 @@
 // ============================================================================
 const ctx = $('Parse Route').item.json;
 const fromLLM = Array.isArray($json.choices);
-const AGENTS = { plan: 'Planner Agent', risk: 'Risk Assessor Agent', status: 'Status Reporter Agent',
+const AGENTS = { plan: 'Planner Agent', risk: 'Risk Assessor Agent', status: 'Status Reporter Agent', timeline: 'Timeline Advisor Agent',
   update: 'Stakeholder Update Agent', clarify: 'Router (clarifying questions)' };
 
 let output = fromLLM ? String($json.choices[0]?.message?.content || '').trim() : ctx.router_reply;
@@ -13,7 +13,7 @@ if (!output) output = 'Mira could not produce an answer. Please rephrase your re
 
 // FR-6/FR-7: every specialist answer carries sources + the PM review note.
 const SOURCES = { plan: 'project_description.txt, project_timeline.csv', risk: 'project_description.txt, project_risks.csv, sample_task_board.csv (evidence)',
-  status: 'sample_task_board.csv, project_timeline.csv', update: 'sample_task_board.csv, project_description.txt' };
+  status: 'sample_task_board.csv, project_timeline.csv', timeline: 'project_timeline.csv', update: 'sample_task_board.csv, project_description.txt' };
 let footer_added = false; // true = the agent forgot the footer and the formatter added it (format-compliance metric)
 if (fromLLM) {
   if (!/_?Sources:/i.test(output)) { output += `\n\n_Sources: ${SOURCES[ctx.route]}_`; footer_added = true; }

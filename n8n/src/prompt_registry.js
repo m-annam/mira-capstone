@@ -2,7 +2,9 @@
 // Mira | Node: "Prompt Registry"   (Code node, Run Once for Each Item)
 // All system prompts live here (copied from /prompts at build time) so they are
 // versioned together. Switch PROMPT_VERSION to run the prompt experiment:
-//   'v6' = current: v5 + Planner phase table always shows number AND name
+//   'v7' = current: v6 + Timeline Advisor agent (new "timeline" route for
+//          phases, dates and milestones)
+//   'v6' = v5 + Planner phase table always shows number AND name
 //          (T1 dropped names in 1 of 3 v5 runs)
 //   'v5' = v4 + sprint reports keep project milestones; Stakeholder
 //          Update cites file names in Sources
@@ -14,7 +16,7 @@
 //   'v2' = first production prompts (grounding rules, clarify route, scoped answers)
 //   'v1' = naive baseline prompts (no guardrails) for before/after comparison
 // ============================================================================
-const PROMPT_VERSION = 'v6';
+const PROMPT_VERSION = 'v7';
 const PROMPTS = __PROMPTS__;
 
 const p = PROMPTS[PROMPT_VERSION];

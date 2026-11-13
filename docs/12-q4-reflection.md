@@ -6,7 +6,7 @@
 - **The router over-clarified (v2).** It never sees the data, so the rule "no task data → ask" fired on every status question, and routing fell to 74%. Telling the router that the specialists have all the data, and adding 8 routing examples, fixed it (v3: 100%).
 - **Naive prompts misused real data.** Facts computed in code kept every ID real, but v1 adopted a user's 30% goal and named owners in a client email.
 - **Two wrong answers passed loose checks (v3).** T10 dropped the Blocked count, and T5 reported project health as Sprint 3's. I found them only by reading every answer. The prompt fixed T10 and E5; T5 needed per-sprint facts computed in code.
-- **Variance.** Three runs of v5 showed T1 dropping phase names 1 time in 3; a one-line Planner rule fixed it (v6: 69/69).
+- **Variance.** Three runs of v5 showed T1 dropping phase names 1 time in 3; a one-line Planner rule fixed it (v6: 69/69). A fifth agent for schedule questions (v7) passed 75/75 over 3 runs.
 - **Lesson:** a green test suite is only as good as its assertions, and one run is not evidence.
 
 **Improvement plan (next two weeks).**

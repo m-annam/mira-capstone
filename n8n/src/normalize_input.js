@@ -3,6 +3,7 @@
 // Accepts items from either trigger:
 //   - "When chat message received"  -> { sessionId, action, chatInput }
 //   - "Baseline Test Cases"         -> { test_id, chatInput, expected_route, checks }
+//   - "When called by Weekly Report" -> { chatInput, sessionId, source: 'weekly-schedule' }
 // A chat message that matches a ground-truth test input (ignoring case,
 // quotes, punctuation and spacing) is graded as that test, so typing a test
 // question in the chat also fills test_id / pass / check_rate / failed_checks.
@@ -19,7 +20,7 @@ return {
   json: {
     chatInput,
     sessionId: j.sessionId || `eval-${j.run_id || 'adhoc'}`,
-    mode: fromRunner ? 'eval' : (matched ? 'chat-graded' : 'chat'),
+    mode: fromRunner ? 'eval' : (j.source === 'weekly-schedule' ? 'scheduled' : (matched ? 'chat-graded' : 'chat')),
     test_id: t.test_id || null,
     test_type: t.type || null,
     expected_route: t.expected_route || null,
